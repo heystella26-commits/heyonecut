@@ -1,0 +1,7 @@
+body{margin:0;background:#fafafa;color:#222;font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;line-height:1.75}
+.w{max-width:760px;margin:0 auto;padding:28px 18px 60px}
+a{color:#111}.top{display:flex;align-items:center;gap:8px;margin-bottom:22px}.top img{height:26px}
+h1{font-size:24px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 6px}p,li{font-size:14.5px}.d{color:#888;font-size:13px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}td,th{border:1px solid #e5e5e5;padding:8px;text-align:left;vertical-align:top}th{background:#f3f3f3}
+.box{background:#fff;border:1px solid #eee;border-radius:12px;padding:14px 16px;margin:12px 0}
+nav.l{margin-top:36px;font-size:13px;color:#888}nav.l a{margin-right:14px;color:#666}

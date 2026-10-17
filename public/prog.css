@@ -1,0 +1,38 @@
+/* 진행 상황 바 */
+.prog{margin-top:14px;background:#f5f9ff;border:1px solid #cfe6ff;border-radius:12px;padding:14px}
+.prog.blog{background:#effaf3;border-color:#bfe8cf}
+.prog .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.prog .stage{font-weight:700;font-size:13px}
+.prog .eta{font-size:13px;font-weight:800;color:var(--blue);white-space:nowrap}
+.prog.blog .eta{color:#05a34a}
+.prog .bar{height:10px;background:#e6eef7;border-radius:99px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#0095f6,#6228d7);border-radius:99px;transition:width .4s linear}
+.prog.blog .bar i{background:linear-gradient(90deg,#03c75a,#00a3a3)}
+.prog .steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.prog .steps span{font-size:11px;font-weight:600;color:var(--mut);background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 9px}
+.prog .steps span.done{color:#fff;background:var(--fg);border-color:var(--fg)}
+.prog .steps span.now{color:var(--fg);border-color:var(--fg)}
+.prog .tip{font-size:12px;color:var(--mut);margin-top:8px}
+.prog.small{margin-top:10px;padding:10px}
+.post .live{margin-left:8px;color:#e0245e;font-size:12px;font-weight:700}
+.post .caret{display:inline-block;width:8px;height:18px;background:var(--green);vertical-align:-3px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.post figure .miss.wait{background:#f6faf7;border-color:#bfe8cf;color:#05a34a;font-weight:600;gap:6px;display:flex;align-items:center;justify-content:center}
+.gallery{max-width:860px;margin:28px auto 0}
+.gallery h3{font-size:17px;margin:0 0 4px;text-align:center}
+.gallery>.note{text-align:center;margin:0 0 14px}
+.ggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.ggrid{grid-template-columns:repeat(2,1fr)}}
+.gcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px;cursor:pointer}
+.gcard b{display:block;font-size:13px;margin:8px 4px 0}
+.gcard small{display:block;font-size:11px;color:var(--mut);margin:2px 4px 4px}
+.gimg{position:relative;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#e9e9e9}
+.gimg img{position:absolute;object-fit:cover}
+.gimg .after{inset:0;width:100%;height:100%;transition:opacity .25s}
+.gimg .before{left:8px;bottom:8px;width:34%;aspect-ratio:4/5;height:auto;border:2px solid #fff;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:all .25s}
+.gcard.flip .before{left:0;bottom:0;width:100%;height:100%;border:0;border-radius:0}
+.gtag{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px}
+.livecap{margin-top:10px;background:#fff;border:1px dashed var(--line);border-radius:10px;padding:10px 12px;text-align:left}
+.livecap b{font-size:12px;color:var(--mut)}
+.livecap pre{margin:6px 0 0;font-size:13px;line-height:1.6;color:var(--fg);white-space:pre-wrap;min-height:20px;max-height:220px;overflow:auto}
+.livecap pre:empty::after{content:"사진을 분석하고 있어요…";color:var(--mut)}

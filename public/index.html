@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>헤이원컷 HEY 1/CUT – 사진 한 장이면 콘텐츠가 알아서</title>
+<link rel="icon" href="/mark.svg?v=4" type="image/svg+xml">
+<style>.logo img{width:28px;height:28px}.logo img.wm{width:auto;height:24px}.logo{font-weight:800;letter-spacing:-.6px}</style>
+<link rel="stylesheet" href="/app.css?v=6">
+<link rel="stylesheet" href="/prog.css?v=9">
+</head>
+<body>
+<div class="top">
+  <div class="logo" onclick="go('form')"><img src="/mark.svg?v=4" alt=""><img class="wm" src="/logo.svg?v=1" alt="헤이원컷"></div>
+  <div class="topr"><span id="quota" class="quota hidden"></span><button id="backBtn" class="back hidden" onclick="go('form')">← 다시 만들기</button></div>
+</div>
+<nav class="tabs">
+  <button class="tab on" id="tabIg" onclick="setMode('ig')">📸 인스타그램</button>
+  <button class="tab" id="tabBlog" onclick="setMode('blog')">📝 블로그</button>
+</nav>
+
+<main>
+<section id="form">
+  <div class="panel">
+    <h2 id="formTitle">인스타그램 게시물 만들기</h2>
+    <input type="file" id="file" accept="image/*" hidden>
+    <div id="drop">📷<br>사진을 누르거나 끌어다 놓으세요</div>
+    <p class="note" style="text-align:center;margin:6px 0 0">사진 전체가 보이도록 4:5 칸에 맞춰 넣어요 · 다시 누르면 사진을 바꿀 수 있어요</p>
+    <div class="two">
+      <div><label>상호명</label><input id="bizName" placeholder="예: 연남동 오후세시"></div>
+      <div id="handleWrap"><label>인스타 계정</label><input id="handle" placeholder="예: ohusesi_cafe"></div>
+      <div id="locWrap" class="hidden"><label>위치 <span class="note">(블로그 검색용)</span></label><input id="location" placeholder="예: 서울 마포구 연남동"></div>
+    </div>
+    <label>어떤 서비스인가요?</label><input id="bizDesc" placeholder="예: 수제 디저트 카페, 대표 메뉴 바스크 치즈케이크">
+    <label>상품 정보 또는 판매페이지 URL <span class="note">(선택)</span></label>
+    <input id="product" placeholder="예: 바스크 치즈케이크 7,500원 / https://smartstore.naver.com/...">
+    <div class="two">
+      <div><label>업종</label><input id="industry" placeholder="비워두면 자동"></div>
+      <div><label>톤</label><select id="tone"><option>친근하고 자연스럽게</option><option>고급스럽고 감성적으로</option><option>유쾌하고 트렌디하게</option><option>신뢰감 있고 전문적으로</option></select></div>
+    </div>
+    <label>이미지 주문서 <span class="note">(선택 · 비워두면 기본 규칙으로 만들어요)</span></label>
+    <textarea id="imageOrder" maxlength="500" placeholder="예: 원목 테이블 위에 놓고, 창가 햇살 느낌으로. 옆에 라떼 한 잔과 작은 꽃병. 전체적으로 베이지 톤."></textarea>
+    <button id="goBtn" class="cta" disabled>게시물 만들기 <span class="cost">1회 차감</span></button>
+    <div id="msg" class="note"></div>
+  </div>
+  <div id="gallery" class="gallery hidden"></div>
+</section>
+
+<section id="res" class="hidden">
+  <div class="result">
+    <div>
+      <div class="phone">
+        <div class="notch"><span>9:41</span><span>📶 🔋</span></div>
+        <div class="appbar"><span>게시물</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></div>
+        <div class="feed">
+          <div class="ph"><div class="av"><span id="avTxt">S</span></div><div><b id="pHandle">my_shop</b><small id="pLoc"></small></div><div style="margin-left:auto;font-weight:700">···</div></div>
+          <div class="slides" id="slides"><div class="track" id="track"></div>
+            <button class="nav l" onclick="slide(-1)">‹</button><button class="nav r" onclick="slide(1)">›</button>
+            <span class="count" id="count"></span></div>
+          <div class="acts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3 2 10l8 3 3 8z"/></svg>
+            <div class="dots" id="dots"></div>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+          </div>
+          <div class="body">
+            <p><b>좋아요 128개</b></p>
+            <p class="cap"><b id="cHandle">my_shop</b> <span id="capShort"></span><span class="more" id="moreBtn" onclick="expand()"> ... 더 보기</span><span id="capRest" class="hidden"></span></p>
+            <p class="cm">댓글 12개 모두 보기</p>
+            <p><b id="fHandle">my_shop</b> <span id="firstC"></span></p>
+            <p class="note">방금 전</p>
+          </div>
+        </div>
+        <div class="tabbar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8v10H3z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-5-5"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="m10 8 6 4-6 4z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        </div>
+      </div>
+      <p class="note" style="text-align:center;margin-top:10px">실제 피드 미리보기 · 오른쪽 <b>이미지</b> 칸에서 사진을 고르고 다듬을 수 있어요</p>
+    </div>
+    <div class="side" id="side"></div>
+  </div>
+</section>
+
+<section id="bres" class="hidden">
+  <div class="bres">
+    <article class="post" id="post"></article>
+    <aside class="bside" id="bside"></aside>
+  </div>
+</section>
+</main>
+<footer style="max-width:960px;margin:40px auto 30px;padding:0 16px;font-size:12.5px;color:#999;line-height:1.8"><a href="/terms.html" style="color:#777;margin-right:14px">이용약관</a><a href="/refund.html" style="color:#777;margin-right:14px">환불 규정</a><a href="/privacy.html" style="color:#777;font-weight:700">개인정보처리방침</a><br>헤이원컷 HEY 1/CUT · 운영자 신은영 · 문의 heystella26@gmail.com</footer>
+
+<div id="paywall" class="modal hidden" onclick="if(event.target===this)closePay()">
+  <div class="sheet">
+    <button class="x" onclick="closePay()">×</button>
+    <h2>이용권을 구매해 주세요</h2>
+    <p>인스타 게시물 · 이미지 새로 만들기 · 다듬기는 1회, 블로그 글(사진 3~5장 포함)은 2회 차감돼요.</p>
+    <label>휴대폰 번호 <span class="note">(필수 · 결제 확인용)</span></label>
+    <input id="payPhone" type="tel" inputmode="numeric" placeholder="01012345678" style="margin-bottom:10px" oninput="this.classList.remove('err')">
+    <label class="agree" style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0 10px;cursor:pointer"><input type="checkbox" id="payAgree" style="width:auto;margin-top:3px"><span><a href="/terms.html" target="_blank">이용약관</a>, <a href="/refund.html" target="_blank">환불 규정</a>, <a href="/privacy.html" target="_blank">개인정보처리방침</a>을 확인했고 동의해요. (필수)</span></label>
+    <div id="payMsg"></div>
+    <div class="plans">
+      <div class="plan">
+        <h3>Go</h3><div class="price">4,500원<small> /1회 구매</small></div>
+        <ul><li>5회 이용 (회당 900원)</li><li>이미지 재생성·다듬기 포함</li><li>가볍게 시작하기 좋아요</li></ul>
+        <button onclick="subscribe('go')">Go 구매하기</button>
+      </div>
+      <div class="plan">
+        <h3>베이직</h3><div class="price">16,900원<small> /1회 구매</small></div>
+        <ul><li>20회 이용 (회당 845원)</li><li>이미지 재생성·다듬기 포함</li><li>캡션·해시태그·댓글·DM</li></ul>
+        <button onclick="subscribe('basic')">베이직 구매하기</button>
+      </div>
+      <div class="plan best">
+        <h3>프로 <span class="chip">추천</span></h3><div class="price">49,000원<small> /1회 구매</small></div>
+        <ul><li>60회 이용 (회당 817원)</li><li>블로그 글 30편 분량</li><li>인스타 예약 발행 (출시 예정)</li></ul>
+        <button onclick="subscribe('pro')">프로 구매하기</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/app.js?v=7"></script>
+<script src="/live.js?v=13"></script>
+<script src="/login.js?v=1"></script>
+</body>
+</html>
