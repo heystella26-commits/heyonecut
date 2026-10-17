@@ -6,7 +6,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": ["/api/*"] },
   "d1_databases": [{ "binding": "DB", "database_name": "heyonecut-db", "database_id": "c0bebdbb-0d39-417c-898a-2037fe575a15" }],
-  "vars": { "FREE_LIMIT": "3", "MIGRATE_FROM": "https://heyonecut.vercel.app" },
+  "vars": { "FREE_LIMIT": "3", "MIGRATE_FROM": "https://heyonecut.vercel.app", "MIGRATE_TICKET": "eyJrIjoiZXhwb3J0Iiwibm9uY2UiOiJkNTlmMTFhZjZjZDgiLCJleHAiOjE3OTI0NzgxOTM0NjJ9.-wCUHwza5TpgQrDzfuDLvHvtqyPbvYFb" },
   "keep_vars": true,
   "observability": { "enabled": true }
 }

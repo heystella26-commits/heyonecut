@@ -65,11 +65,11 @@ async function readBody(request) {
 
 // Vercel Blob에 있던 데이터(회원·주문·샘플)를 처음 한 번만 D1으로 복사
 async function migrateOnce() {
-  if (!process.env.MIGRATE_FROM || !process.env.QUOTA_SECRET) return;
+  if (!process.env.MIGRATE_FROM || !process.env.MIGRATE_TICKET) return;
   if (await getRaw("meta/migrated")) return;
   await putRaw("meta/migrated", String(Date.now()), "text/plain");
   try {
-    const r = await fetch(process.env.MIGRATE_FROM + "/api/export", { headers: { "x-sp-test": process.env.QUOTA_SECRET } });
+    const r = await fetch(process.env.MIGRATE_FROM + "/api/export?t=" + encodeURIComponent(process.env.MIGRATE_TICKET));
     if (!r.ok) throw new Error("export " + r.status);
     const items = await r.json();
     let n = 0;
