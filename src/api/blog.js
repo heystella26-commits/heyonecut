@@ -1,5 +1,6 @@
 // 블로그: 사진 1장 + 가게 정보 → 본문 전체 작성 → 사진 들어갈 자리·종류 추천 → 그에 맞는 사진 3~5장 생성
 import { checkQuota, useQuota, signTicket } from "./_quota.js";
+import { track } from "./_track.js";
 
 const BLOG_COST = 2;
 
@@ -92,7 +93,7 @@ export default async function handler(req, res) {
   const model = (quota.test && wantModel) || process.env.BLOG_MODEL || process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
 
   // 스트리밍 시작 전에 미리 차감(쿠키는 첫 응답 전에만 보낼 수 있음). 실패하면 환불권을 줌
-  await useQuota(res, quota, BLOG_COST);
+  await useQuota(res, quota, BLOG_COST, "blog");
   const refund = quota.test ? null : signTicket({ k: "refund", uid: quota.id, n: BLOG_COST, nonce: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), exp: Date.now() + 864e5 });
   res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -133,6 +134,7 @@ export default async function handler(req, res) {
       ticket: signTicket({ k: "bimg", uid: quota.id, slot: p.slot || k + 1, prompt: p.prompt_en, exp }) }));
     send({ t: "done", model, secs: (Date.now() - t0) / 1000, post: { title: post.title, body: post.body, tags: post.tags || [], sources: post.sources || [], images } });
   } catch (e) {
+    await track("fail", { id: quota.id, member: !!quota.user, kind: "blog" });
     send({ t: "error", v: e.message, refund });
   }
   res.end();

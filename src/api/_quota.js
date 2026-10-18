@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { getJSON, putJSON } from "./_store.js";
+import { track } from "./_track.js";
 
 // 무료 체험은 로그인한 계정에만 제공
 export const FREE_LIMIT = Number(process.env.FREE_LIMIT ?? 0);
@@ -56,14 +57,17 @@ export async function checkQuota(req, res, n = 1) {
   if (left(q) < n) {
     if (!q.user) writeCookieQ(res, q);
     const msg = q.user ? "이용 가능 횟수가 없어요. 이용권을 구매해 주세요." : "로그인하면 무료로 " + FREE_LIMIT + "회 써볼 수 있어요.";
+    await track("paywall", { id: q.id, member: !!q.user, n });
     res.status(402).json({ error: msg, paywall: true, needLogin: !q.user });
     return null;
   }
   return q;
 }
-export async function useQuota(res, q, n = 1) {
+export async function useQuota(res, q, n = 1, kind = null) {
   if (q.test) return;
-  for (let k = 0; k < n; k++) { if (q.user && q.used < FREE_LIMIT) q.used += 1; else q.credits = Math.max(0, q.credits - 1); }
+  let free = 0;
+  for (let k = 0; k < n; k++) { if (q.user && q.used < FREE_LIMIT) { q.used += 1; free++; } else q.credits = Math.max(0, q.credits - 1); }
+  await track("use", { id: q.id, member: !!q.user, kind, n, free });
   await writeQuota(res, q);
   res.setHeader("X-Free-Left", String(left(q)));
 }

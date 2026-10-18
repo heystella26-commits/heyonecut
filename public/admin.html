@@ -1,0 +1,67 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>운영 대시보드 – 헤이원컷</title><link rel="icon" href="/mark.svg?v=4">
+<style>
+:root{--fg:#1a1a1a;--mut:#7a7a7a;--line:#ececec;--bg:#f7f7f5;--card:#fff;--brand:#ff5a36;--g:#16a34a;--y:#d97706;--r:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.w{max-width:1040px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+h1{font-size:20px;margin:0}h1 small{color:var(--mut);font-weight:400;font-size:13px;margin-left:6px}
+.ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.ctl input,.ctl button{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.ctl button{cursor:pointer}.ctl button.on{background:var(--fg);color:#fff;border-color:var(--fg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.k b{display:block;font-size:12px;color:var(--mut);font-weight:600}.k .v{font-size:24px;font-weight:800;margin:2px 0}
+.k .s{font-size:12px}.k .s.g{color:var(--g)}.k .s.y{color:var(--y)}.k .s.r{color:var(--r)}
+h2{font-size:15px;margin:26px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.fun .row{display:grid;grid-template-columns:150px 1fr 110px;gap:10px;align-items:center;margin:6px 0}
+.fun .bar{height:22px;background:#f1f1f1;border-radius:6px;overflow:hidden}.fun .bar i{display:block;height:100%;background:var(--brand);border-radius:6px}
+.fun .n{text-align:right;font-variant-numeric:tabular-nums}.fun .n small{color:var(--mut);margin-left:4px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{font-size:12px;color:var(--mut);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:720px){.two{grid-template-columns:1fr}.fun .row{grid-template-columns:96px 1fr 84px}}
+.note{color:var(--mut);font-size:12px;margin-top:8px}.err{background:#fff3f0;border:1px solid #ffd2c7;padding:14px;border-radius:12px}
+a{color:var(--brand)}
+</style></head><body><div class="w">
+<header><h1>헤이원컷 운영 대시보드<small id="range"></small></h1>
+<div class="ctl"><button data-d="7">7일</button><button data-d="30" class="on">30일</button><button data-d="90">90일</button>
+<input type="date" id="from"><span>~</span><input type="date" id="to"><button id="go">조회</button></div></header>
+<div id="out"><p class="note">불러오는 중…</p></div>
+<p class="note">세션·페이지뷰·유입 경로는 <a href="https://dash.cloudflare.com/?to=/:account/web-analytics" target="_blank" rel="noopener">Cloudflare Web Analytics</a>에서 확인해요. 여기 '사용자'는 이 브라우저 기준 순방문자(쿠키)예요. 판정 기준은 출시 테스트 플랜의 1달 기준(30일 조회 기준)이에요.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id), won=n=>Math.round(n||0).toLocaleString()+"원", pct=x=>isFinite(x)?(x*100).toFixed(1)+"%":"–", num=n=>(n||0).toLocaleString();
+const kst=d=>new Date(d.getTime()+9*3600e3).toISOString().slice(0,10);
+function setRange(days){const t=new Date();$("to").value=kst(t);$("from").value=kst(new Date(t-(days-1)*864e5));}
+function judge(v,g,y){return v>=g?["g","🟢 유지"]:v>=y?["y","🟡 연장"]:["r","🔴 중단"]}
+function kpi(label,val,shown,g,y){const [c,t]=g==null?["",""]:judge(val,g,y);return `<div class="k"><b>${label}</b><div class="v">${shown}</div><div class="s ${c}">${t}</div></div>`}
+async function load(){
+  const r=await fetch(`/api/stats?from=${$("from").value}&to=${$("to").value}`,{cache:"no-store"});const d=await r.json();
+  if(!r.ok){$("out").innerHTML=`<div class="err">${d.error||"불러오지 못했어요."} <a href="/">홈에서 로그인</a></div>`;return}
+  $("range").textContent=`${d.from} ~ ${d.to}`;
+  const signRate=d.users?d.signups/d.users:0, payRate=d.signups?d.payers/d.signups:0, free3=d.freeLimit>=3;
+  const g=kpi;
+  let h=`<div class="grid">
+   ${g("방문 수 (세션 근사)",d.sessions,num(d.sessions),1500,600)}
+   ${g("사용자",d.users,num(d.users)+"명",1000,400)}
+   ${g("가입자 (신규)",d.signups,num(d.signups)+"명",150,50)}
+   ${g("가입전환율",signRate,pct(signRate),.15,.08)}
+   ${g("결제자",d.payers,num(d.payers)+"명",20,8)}
+   ${g(`결제전환율 (무료 ${d.freeLimit}회)`,payRate,pct(payRate),free3?.2:.12,free3?.1:.06)}
+   ${g("결제액",d.revenue,won(d.revenue),250000,80000)}
+   ${g("재구매자",d.repeatPayers,num(d.repeatPayers)+"명")}
+  </div>`;
+  const steps=[["방문 사용자",d.users],["가입",d.signups],["첫 생성 (회원)",d.activated],["무료 소진·결제벽",d.paywallUsers],["결제창 열기",d.payOpenUsers],["결제 완료",d.payers]];
+  const top=Math.max(1,...steps.map(s=>s[1]));
+  h+=`<h2>퍼널</h2><div class="card fun">${steps.map((s,i)=>`<div class="row"><span>${s[0]}</span><div class="bar"><i style="width:${(s[1]/top*100).toFixed(1)}%"></i></div><span class="n">${num(s[1])}${i?`<small>${pct(steps[i-1][1]?s[1]/steps[i-1][1]:0)}</small>`:""}</span></div>`).join("")}
+   <p class="note">오른쪽 작은 숫자 = 바로 앞 단계 대비 남은 비율. 가장 크게 떨어지는 단계부터 고치세요.</p></div>`;
+  const KN={instagram:"인스타 게시물",blog:"블로그",refine:"사진 다듬기",regen:"A·B 재생성",go:"Go 5회",basic:"베이직 20회",pro:"프로 60회"};
+  h+=`<div class="two"><div><h2>상품별 결제</h2><div class="card"><table><tr><th>상품</th><th>건수</th><th>금액</th></tr>${d.plans.map(p=>`<tr><td>${KN[p.kind]||p.kind}</td><td>${p.c}</td><td>${won(p.a)}</td></tr>`).join("")||`<tr><td colspan=3>아직 결제가 없어요</td></tr>`}</table></div></div>
+   <div><h2>기능별 사용</h2><div class="card"><table><tr><th>기능</th><th>횟수</th><th>차감</th><th>그중 무료</th></tr>${d.kinds.map(k=>`<tr><td>${KN[k.kind]||k.kind||"기타"}</td><td>${k.c}</td><td>${k.n}</td><td>${k.f}</td></tr>`).join("")||`<tr><td colspan=4>아직 사용이 없어요</td></tr>`}</table>
+   <p class="note">무료 차감 ${num(d.freeCreditsUsed)}회 · 유료 차감 ${num(d.creditsUsed-d.freeCreditsUsed)}회 · 생성 실패 ${num(d.fails)}회</p></div></div></div>`;
+  h+=`<h2>일별</h2><div class="card"><table><tr><th>날짜</th><th>사용자</th><th>가입</th><th>결제자</th><th>결제액</th><th>차감 횟수</th></tr>${d.daily.map(x=>`<tr><td>${x.day}</td><td>${x.users}</td><td>${x.signups}</td><td>${x.payers}</td><td>${won(x.revenue)}</td><td>${x.credits}</td></tr>`).join("")||`<tr><td colspan=6>기록이 없어요</td></tr>`}</table></div>`;
+  $("out").innerHTML=h;
+}
+document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-d]").forEach(x=>x.classList.toggle("on",x===b));setRange(+b.dataset.d);load()});
+$("go").onclick=()=>{document.querySelectorAll("[data-d]").forEach(x=>x.classList.remove("on"));load()};
+setRange(30);load();
+</script></body></html>

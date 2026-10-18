@@ -1,6 +1,7 @@
 // 소셜 로그인 (카카오·네이버·구글)
 // /api/auth/kakao → 로그인 창으로 이동, 같은 주소로 돌아오면(code) 계정 연결 / /api/auth/logout → 로그아웃
 import crypto from "node:crypto";
+import { track } from "../_track.js";
 import { addCookie, setSession, clearSession, loadUser, mergeIntoUser } from "../_quota.js";
 
 const E = process.env;
@@ -46,7 +47,9 @@ export default async function handler(req, res) {
     const me = p.pick(await fetch(p.me, { headers: { authorization: `Bearer ${t.access_token}` } }).then(r => r.json()));
     if (!me.id) throw new Error("사용자 정보 없음");
     const uid = `${name}_${me.id}`;
-    const u = (await loadUser(uid)) || { uid, provider: name, credits: 0, used: 0, claimed: [], created: Date.now() };
+    const existing = await loadUser(uid);
+    const u = existing || { uid, provider: name, credits: 0, used: 0, claimed: [], created: Date.now() };
+    await track(existing ? "login" : "signup", { id: uid, member: true, kind: name });
     Object.assign(u, { name: me.name || u.name || "", email: me.email || u.email || "", lastLogin: Date.now() });
     await mergeIntoUser(req, res, u);
     setSession(res, uid);

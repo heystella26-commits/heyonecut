@@ -12,8 +12,9 @@ import samples from "./api/samples.js";
 import adminGen from "./api/admin-gen.js";
 import auth from "./api/auth/p.js";
 import account from "./api/account.js";
+import stats from "./api/stats.js";
 
-const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account };
+const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account, stats };
 
 // Vercel식 (req, res) 핸들러를 Worker Request/Response로 연결
 function makeRes(resolve) {

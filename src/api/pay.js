@@ -1,6 +1,7 @@
 // POST: 결제 요청 생성(페이앱) / GET ?oid=: 결제 확인 후 이용권 적립
 import crypto from "node:crypto";
 import { PLANS } from "./_plans.js";
+import { track } from "./_track.js";
 import { saveOrder, loadOrder } from "./_orders.js";
 import { readQuota, writeQuota, cookieWalletId } from "./_quota.js";
 
@@ -27,6 +28,7 @@ export default async function handler(req, res) {
     const out = new URLSearchParams(await r.text());
     if (out.get("state") !== "1") return res.status(502).json({ error: "결제창 생성 실패: " + (out.get("errorMessage") || r.status) });
     if (!q.user) await writeQuota(res, q);
+    await track("pay_open", { id: q.id, member: !!q.user, kind: plan, amount: p.price });
     return res.status(200).json({ oid, payurl: out.get("payurl") });
   }
   // GET: 결제 확인

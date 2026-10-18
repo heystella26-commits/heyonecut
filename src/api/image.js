@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     const images = out.filter(x => x.status === "fulfilled").map(x => x.value);
     if (images.length) {
       const trimmed = images.join("").length > 4000000 ? images.slice(0, 1) : images;
-      await useQuota(res, quota);
+      await useQuota(res, quota, 1, mode === "refine" ? "refine" : "regen");
       const labels = out.map((x, k) => x.status === "fulfilled" ? (jobs[k].label || "다듬은 이미지") : null).filter(Boolean).slice(0, trimmed.length);
       return res.status(200).json({ images: trimmed, labels, model: m });
     }

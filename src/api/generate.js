@@ -1,4 +1,5 @@
 import { checkQuota, useQuota } from "./_quota.js";
+import { track } from "./_track.js";
 import { toEnglish, editImage, claudeStream, grab } from "./_ai.js";
 import { signTicket } from "./_quota.js";
 // SnapPack MVP - 사진 1장 → 콘텐츠 패키지 생성 API
@@ -127,7 +128,7 @@ export default async function handler(req, res) {
   }
 
   // 스트리밍 시작: 차감을 먼저 쿠키에 쓰고(실패 시 환불 티켓), 글이 써지는 대로 보냄
-  await useQuota(res, quota);
+  await useQuota(res, quota, 1, "instagram");
   res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Accel-Buffering", "no");
@@ -168,6 +169,7 @@ export default async function handler(req, res) {
     const imgs = im.images || [];
     send({ type: "done", images: imgs.join("").length > 4000000 ? imgs.slice(0, 1) : imgs, image_labels: im.labels || [], image_model: im.model, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
   } catch (e) {
+    await track("fail", { id: quota.id, member: !!quota.user, kind: "instagram" });
     send({ type: "error", error: e.message, refund: quota.test ? null : signTicket({ k: "refund", uid: quota.id, n: 1, nonce: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), exp: Date.now() + 864e5 }) });
   }
   res.end();
