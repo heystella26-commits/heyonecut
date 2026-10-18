@@ -186,15 +186,20 @@ function renderBlog(p) {
   </div>`;
 }
 
-// ---------- 첫 화면 샘플 갤러리 ----------
-fetch("/api/samples").then(r => r.json()).then(list => {
-  if (!Array.isArray(list) || !list.length) return;
+// ---------- 첫 화면 사례 (사진 1장 → 블로그 사진 + 글) ----------
+{ const CASES = [
+    { id: "y2k", tag: "패션 · Y2K 스트릿", title: "연남 세시 패션 Y2K 룩 후기 | 연남동 데일리룩·스트릿 코디 추천", stats: "본문 1,042자 · 사진 4장", labels: ["디테일 클로즈업", "로우앵글 하의·신발", "탑뷰 플랫레이"] },
+    { id: "yeonnam", tag: "패션 · 데일리룩", title: "연남 세시 패션 | 연남동 데일리룩, 차콜 가디건 + 와이드 데님 코디 후기", stats: "본문 993자 · 사진 4장", labels: ["상의 디테일 클로즈업", "하의·신발 로우앵글", "소품 플랫레이 탑뷰"] } ];
   const g = $("gallery"); g.classList.remove("hidden");
-  g.innerHTML = `<h3>📸 사진 한 장이 이렇게 바뀌어요</h3><p class="note">왼쪽 아래 작은 사진이 원본, 큰 사진이 헤이원컷 결과예요. 눌러서 비교해 보세요. (원본은 휴대폰으로 대충 찍은 사진을 흉내 낸 AI 예시 사진이에요)</p>
-    <div class="ggrid">${list.map(s => `<div class="gcard" onclick="this.classList.toggle('flip')">
-      <div class="gimg"><img class="after" loading="lazy" src="/api/samples?f=${esc(s.id)}-after" alt="${esc(s.label)} 결과"><img class="before" loading="lazy" src="/api/samples?f=${esc(s.id)}-before" alt="${esc(s.label)} 원본"><span class="gtag">원본 ↔ 결과</span></div>
-      <b>${esc(s.label)}</b>${s.note ? `<small>${esc(s.note)}</small>` : ""}</div>`).join("")}</div>`;
-}).catch(() => {});
+  g.innerHTML = `<h3>📸 사진 한 장이 이렇게 바뀌어요</h3><p class="note">왼쪽이 올린 사진 1장, 오른쪽이 헤이원컷이 만든 블로그 사진이에요. 글 제목을 누르면 함께 만들어진 블로그 원문 전체를 볼 수 있어요. (예시 인물은 AI로 만든 가상 인물이에요)</p>
+    ${CASES.map(c => `<div class="case-row">
+      <div class="case-imgs"><figure class="co"><img loading="lazy" src="/cases/${c.id}-0.jpg" alt="올린 사진"><figcaption>올린 사진</figcaption></figure><span class="case-arrow">→</span>
+      ${c.labels.map((l, k) => `<figure><img loading="lazy" src="/cases/${c.id}-${k + 1}.jpg" alt="${esc(l)}"><figcaption>${esc(l)}</figcaption></figure>`).join("")}</div>
+      <a class="case-title" href="/cases.html#full-${c.id}"><small>${esc(c.tag)} · ${esc(c.stats)}</small>${esc(c.title)} <span>원문 전체 보기 →</span></a></div>`).join("")}
+    <p style="text-align:center;margin:14px 0 0"><a href="/cases.html" style="font-weight:700;color:#ff5a36">사례 전체 보기 →</a></p>`;
+  const st = document.createElement("style");
+  st.textContent = `.case-row{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}.case-imgs{display:grid;grid-template-columns:1fr auto 1fr 1fr 1fr;gap:8px;align-items:center}.case-imgs figure{margin:0}.case-imgs img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;display:block}.case-imgs figcaption{font-size:11px;color:var(--mut);margin-top:4px;text-align:center}.case-imgs .co img{outline:2px solid #191716;outline-offset:-2px}.case-arrow{color:#ff5a36;font-weight:800}.case-title{display:block;margin-top:10px;text-decoration:none;color:var(--fg);font-weight:700;font-size:14px;line-height:1.45}.case-title small{display:block;color:#03a94e;font-weight:600;font-size:11.5px}.case-title span{color:#ff5a36;font-size:12.5px;white-space:nowrap}.case-title:hover{text-decoration:underline}@media(max-width:600px){.case-imgs{grid-template-columns:1fr 1fr;}.case-arrow{display:none}}`;
+  document.head.appendChild(st); }
 
 // ---------- 결제 전 약관 동의 확인 ----------
 { const _sub = subscribe;
