@@ -73,7 +73,7 @@ export async function useQuota(res, q, n = 1, kind = null) {
 }
 export async function status(req) {
   const q = await readQuota(req);
-  return { left: left(q), free: freeLeft(q), credits: q.credits, limit: FREE_LIMIT, user: q.user ? { name: q.user.name || "", provider: q.user.provider } : null };
+  return { left: left(q), free: freeLeft(q), credits: q.credits, limit: FREE_LIMIT, user: q.user ? { name: q.user.name || "", provider: q.user.provider, admin: isAdmin(q.user.uid) || undefined } : null };
 }
 export function signTicket(obj) {
   const b = Buffer.from(JSON.stringify(obj)).toString("base64url");
@@ -84,5 +84,6 @@ export function verifyTicket(t) {
   if (!b || !s || crypto.createHmac("sha256", SECRET).update("t." + b).digest("base64url").slice(0, 32) !== s) return null;
   try { const o = JSON.parse(Buffer.from(b, "base64url").toString()); return o.exp && o.exp < Date.now() ? null : o; } catch { return null; }
 }
+export const isAdmin = uid => !!uid && String(process.env.ADMIN_UIDS || "").split(",").map(s => s.trim()).includes(uid);
 export const isTest = (req, q) => !!q.test;
 export const cookieWalletId = req => readCookieQ(req).id;
