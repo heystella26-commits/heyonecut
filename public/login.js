@@ -10,13 +10,19 @@
   const slot = document.createElement("span"); slot.id = "lgSlot";
   document.querySelector(".topr")?.appendChild(slot);
   window.openLogin = () => m.classList.remove("hidden");
+  window.deleteAccount = async () => {
+    if (!confirm("탈퇴하면 계정 정보와 남은 이용권이 바로 삭제되고 되돌릴 수 없어요. 탈퇴할까요?")) return;
+    const r = await fetch("/api/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "delete" }) });
+    alert(r.ok ? "탈퇴가 완료됐어요. 그동안 이용해 주셔서 감사합니다." : "탈퇴 처리 중 문제가 생겼어요. heystella26@gmail.com 으로 알려 주세요.");
+    location.href = "/";
+  };
   // 로그인 안 한 사람이 횟수가 없으면 결제창 대신 로그인(무료 3회)부터
   const _openPay = window.openPay;
   window.openPay = openPay = function () { if (!window.__user && !window.__payDirect) { openLogin(); return; } return _openPay(); };
   const LN = { kakao: "카카오", naver: "네이버", google: "구글" };
   window.refreshUser = () => fetch("/api/quota", { cache: "no-store" }).then(r => r.json()).then(q => {
     showQuota(q.left);
-    slot.innerHTML = q.user ? `<span class="lgname">${esc(q.user.name || LN[q.user.provider] + " 사용자")}님<a href="/api/auth/logout">로그아웃</a></span>` : `<button class="lgbtn" onclick="openLogin()">로그인 · 무료 3회</button>`;
+    slot.innerHTML = q.user ? `<span class="lgname">${esc(q.user.name || LN[q.user.provider] + " 사용자")}님<a href="/api/auth/logout">로그아웃</a><a href="javascript:void(0)" onclick="deleteAccount()">탈퇴</a></span>` : `<button class="lgbtn" onclick="openLogin()">로그인 · 무료 3회</button>`;
     window.__user = q.user;
     const pm = document.getElementById("payLoginHint"); if (pm) pm.style.display = q.user ? "none" : "";
   }).catch(() => {});

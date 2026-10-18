@@ -17,3 +17,10 @@ export async function getBin(key) {
   const r = await getRaw(key); if (!r) return null;
   return { buf: Buffer.from(r.v, "base64"), type: r.type };
 }
+// 한 번만 쓸 수 있는 티켓(충전·환불·사진) 사용 기록. 처음이면 true
+export async function claimOnce(key) {
+  const r = await env.DB.prepare("INSERT INTO kv (k, v, type, updated) VALUES (?, '1', 'text/plain', ?) ON CONFLICT(k) DO NOTHING").bind(safe("used/" + key), Date.now()).run();
+  return r.meta.changes === 1;
+}
+export const releaseOnce = key => env.DB.prepare("DELETE FROM kv WHERE k = ?").bind(safe("used/" + key)).run();
+export const deleteKey = key => env.DB.prepare("DELETE FROM kv WHERE k = ?").bind(safe(key)).run();

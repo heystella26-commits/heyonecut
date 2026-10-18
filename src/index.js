@@ -1,6 +1,4 @@
 // 헤이원컷 Cloudflare Worker: /api/* 는 아래 함수로, 나머지는 public/ 정적 파일
-import { env } from "cloudflare:workers";
-import { putRaw, getRaw } from "./api/_store.js";
 import quota from "./api/quota.js";
 import generate from "./api/generate.js";
 import image from "./api/image.js";
@@ -13,8 +11,9 @@ import grant from "./api/grant.js";
 import samples from "./api/samples.js";
 import adminGen from "./api/admin-gen.js";
 import auth from "./api/auth/p.js";
+import account from "./api/account.js";
 
-const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen };
+const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account };
 
 // Vercel식 (req, res) 핸들러를 Worker Request/Response로 연결
 function makeRes(resolve) {
@@ -63,33 +62,27 @@ async function readBody(request) {
   return text;
 }
 
-// Vercel Blob에 있던 데이터(회원·주문·샘플)를 처음 한 번만 D1으로 복사
-async function migrateOnce() {
-  if (!process.env.MIGRATE_FROM || !process.env.MIGRATE_TICKET) return;
-  if (await getRaw("meta/migrated")) return;
-  await putRaw("meta/migrated", String(Date.now()), "text/plain");
-  try {
-    const r = await fetch(process.env.MIGRATE_FROM + "/api/export?t=" + encodeURIComponent(process.env.MIGRATE_TICKET));
-    if (!r.ok) throw new Error("export " + r.status);
-    const items = await r.json();
-    let n = 0;
-    for (const it of items) {
-      if (await getRaw(it.path)) continue; // 이미 새로 생긴 데이터는 덮어쓰지 않음
-      await putRaw(it.path, it.json ? Buffer.from(it.b64, "base64").toString("utf8") : it.b64, it.type);
-      n++;
-    }
-    await putRaw("meta/migrated", JSON.stringify({ at: Date.now(), n, total: items.length }), "application/json");
-  } catch (e) {
-    await env.DB.prepare("DELETE FROM kv WHERE k = ?").bind("meta/migrated").run().catch(() => {});
-    await putRaw("meta/migrate_error", String(e.message), "text/plain").catch(() => {});
-  }
+// 모든 응답에 붙이는 보안 헤더
+const SEC = {
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+};
+function secure(r) {
+  const out = new Response(r.body, r);
+  for (const [k, v] of Object.entries(SEC)) out.headers.set(k, v);
+  return out;
 }
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env, ctx) { return secure(await route(request, env, ctx)); },
+};
+
+async function route(request, env, ctx) {
     const url = new URL(request.url);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
-    ctx.waitUntil(migrateOnce().catch(() => {}));
     const parts = url.pathname.slice(5).replace(/\/+$/, "").split("/");
     const query = Object.fromEntries(url.searchParams);
     let handler = ROUTES[parts[0]];
@@ -105,5 +98,4 @@ export default {
         .catch(e => { if (!res.headersSent) res.status(500).json({ error: e.message || "서버 오류" }); else res.end(); });
       ctx.waitUntil(run);
     });
-  },
-};
+}
