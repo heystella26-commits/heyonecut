@@ -211,6 +211,31 @@ async function registerCase(btn) {
   };
 }
 
+// ---------- 첫 구매 할인 표시 (베이직) ----------
+async function showOffer() {
+  const card = [...document.querySelectorAll("#paywall .plan")].find(el => el.querySelector("button")?.getAttribute("onclick")?.includes("'basic'"));
+  if (!card) return;
+  card.querySelector(".offer")?.remove(); card.classList.remove("hasoffer");
+  const pr = card.querySelector(".price"); if (pr.dataset.orig) pr.innerHTML = pr.dataset.orig;
+  const d = await fetch("/api/pay?offer=1", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
+  const o = d.offer;
+  if (!o) {
+    if (!d.member) card.insertAdjacentHTML("afterbegin", `<div class="offer muted">로그인하면 첫 구매 할인을 받을 수 있어요</div>`);
+    return;
+  }
+  card.classList.add("hasoffer");
+  pr.dataset.orig = pr.dataset.orig || pr.innerHTML;
+  pr.innerHTML = `<s>${o.base.toLocaleString()}원</s> ${o.price.toLocaleString()}원<small> /첫 구매</small>`;
+  card.insertAdjacentHTML("afterbegin", `<div class="offer">${o.launch ? "🎉 오픈 기념 " : "첫 구매 "}${o.rate}% 할인${o.launch && o.until ? ` · ${o.until.slice(5).replace("-", "/")}까지` : ""}</div>`);
+  card.querySelector("ul li").textContent = `20회 이용 (회당 ${Math.round(o.price / 20).toLocaleString()}원)`;
+}
+{ const st = document.createElement("style");
+  st.textContent = `.plan .offer{background:#ff5a36;color:#fff;font-size:12px;font-weight:800;border-radius:999px;padding:4px 10px;display:inline-block;margin-bottom:6px}.plan .offer.muted{background:#f1f1f1;color:#777;font-weight:600}.plan.hasoffer{outline:2px solid #ff5a36;outline-offset:-2px}.plan .price s{color:#aaa;font-weight:500;font-size:.7em;margin-right:4px}`;
+  document.head.appendChild(st);
+  const _op = window.openPay;
+  window.openPay = openPay = function () { const r = _op.apply(this, arguments); showOffer(); return r; };
+}
+
 // ---------- 결제 전 약관 동의 확인 ----------
 { const _sub = subscribe;
   window.subscribe = subscribe = function (plan) {

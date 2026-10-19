@@ -2,6 +2,7 @@
 import crypto from "node:crypto";
 import { env } from "cloudflare:workers";
 const day = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); // 한국 날짜
+export const hashId = id => id ? crypto.createHash("sha256").update("hoc." + id).digest("hex").slice(0, 16) : null;
 const hash = id => id ? crypto.createHash("sha256").update("hoc." + id).digest("hex").slice(0, 16) : null;
 export async function track(ev, { id, member = false, kind = null, n = 0, amount = 0, free = 0 } = {}) {
   try {
