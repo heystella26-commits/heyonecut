@@ -7,42 +7,75 @@
 <style>.logo img{width:28px;height:28px}.logo img.wm{width:auto;height:24px}.logo{font-weight:800;letter-spacing:-.6px}</style>
 <link rel="stylesheet" href="/app.css?v=6">
 <link rel="stylesheet" href="/prog.css?v=9">
+<link rel="stylesheet" href="/home.css?v=1">
 </head>
 <body>
 <div class="top">
   <div class="logo" onclick="go('form')"><img src="/mark.svg?v=4" alt=""><img class="wm" src="/logo.svg?v=1" alt="헤이원컷"></div>
   <div class="topr"><span id="quota" class="quota hidden"></span><button id="backBtn" class="back hidden" onclick="go('form')">← 다시 만들기</button></div>
 </div>
-<nav class="tabs">
-  <button class="tab on" id="tabIg" onclick="setMode('ig')">📸 인스타그램</button>
-  <button class="tab" id="tabBlog" onclick="setMode('blog')">📝 블로그</button>
-</nav>
-
 <main>
 <section id="form">
+  <header class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">카페 · 네일 · 꽃집 · 쇼핑몰 사장님을 위한</p>
+      <h1>사진 <em>한 장</em> 올리면<br>인스타·블로그 글이 <em>1분</em> 만에</h1>
+      <p class="sub">폰으로 찍은 사진 1장으로 연출 사진을 새로 만들고, 캡션·해시태그·블로그 글까지 바로 붙여넣게 써 드려요.</p>
+      <div class="hero-badges"><span class="hb hot">로그인하면 무료 3회</span><span class="hb">첫 구매 베이직 할인</span><span class="hb">실패하면 차감 안 돼요</span></div>
+    </div>
+    <a class="hero-demo" href="/cases#full-y2k" aria-label="실제 사례 보기">
+      <figure><img src="/cases/y2k-0.jpg" alt="올린 사진"><figcaption>올린 사진</figcaption></figure>
+      <span class="hero-arrow" aria-hidden="true">→</span>
+      <figure class="stack"><img src="/cases/y2k-3.jpg" alt="만들어진 플랫레이"><img src="/cases/y2k-1.jpg" alt="만들어진 디테일 컷"><figcaption>만들어진 사진 + 블로그 글</figcaption></figure>
+    </a>
+  </header>
+  <nav class="tabs" aria-label="만들 콘텐츠">
+    <button class="tab on" id="tabIg" onclick="setMode('ig')"><b>📸 인스타그램</b><small>사진 2장 + 캡션·해시태그·DM</small><i>1회</i></button>
+    <button class="tab" id="tabBlog" onclick="setMode('blog')"><b>📝 블로그</b><small>네이버용 · 사진 3~5장 + 글 1,000자</small><i>2회</i></button>
+  </nav>
   <div class="panel">
     <h2 id="formTitle">인스타그램 게시물 만들기</h2>
     <input type="file" id="file" accept="image/*" hidden>
-    <div id="drop">📷<br>사진을 누르거나 끌어다 놓으세요</div>
-    <p class="note" style="text-align:center;margin:6px 0 0">사진 전체가 보이도록 4:5 칸에 맞춰 넣어요 · 다시 누르면 사진을 바꿀 수 있어요</p>
+    <div id="drop"><div class="drop-in"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><b>사진 올리기</b><span>누르거나 끌어다 놓으세요 · 휴대폰은 촬영도 돼요</span></div></div>
+    <p class="drop-help">사진이 없나요? <button type="button" id="sampleBtn">예시 사진으로 해 보기</button></p>
     <div class="two">
       <div><label>상호명</label><input id="bizName" placeholder="예: 연남동 오후세시"></div>
       <div id="handleWrap"><label>인스타 계정</label><input id="handle" placeholder="예: ohusesi_cafe"></div>
       <div id="locWrap" class="hidden"><label>위치 <span class="note">(블로그 검색용)</span></label><input id="location" placeholder="예: 서울 마포구 연남동"></div>
     </div>
+    <label>업종 <span class="note">(비워두면 사진을 보고 자동으로 정해요)</span></label>
+    <div class="chips-ind" id="indChips"><button type="button">카페·디저트</button><button type="button">음식점</button><button type="button">네일·뷰티</button><button type="button">꽃집</button><button type="button">패션·쇼핑몰</button><button type="button">공방·소품</button></div>
+    <details class="more"><summary><span>더 자세히 적기 <small class="note">선택 · 적을수록 우리 가게답게 나와요</small></span></summary>
     <label>어떤 서비스인가요?</label><input id="bizDesc" placeholder="예: 수제 디저트 카페, 대표 메뉴 바스크 치즈케이크">
-    <label>상품 정보 또는 판매페이지 URL <span class="note">(선택)</span></label>
+    <label>상품 정보 또는 판매페이지 URL</label>
     <input id="product" placeholder="예: 바스크 치즈케이크 7,500원 / https://smartstore.naver.com/...">
     <div class="two">
-      <div><label>업종</label><input id="industry" placeholder="비워두면 자동"></div>
+      <div><label>업종 직접 입력</label><input id="industry" placeholder="비워두면 자동"></div>
       <div><label>톤</label><select id="tone"><option>친근하고 자연스럽게</option><option>고급스럽고 감성적으로</option><option>유쾌하고 트렌디하게</option><option>신뢰감 있고 전문적으로</option></select></div>
     </div>
     <label>이미지 주문서 <span class="note">(선택 · 비워두면 기본 규칙으로 만들어요)</span></label>
     <textarea id="imageOrder" maxlength="500" placeholder="예: 원목 테이블 위에 놓고, 창가 햇살 느낌으로. 옆에 라떼 한 잔과 작은 꽃병. 전체적으로 베이지 톤."></textarea>
-    <button id="goBtn" class="cta" disabled>게시물 만들기 <span class="cost">1회 차감</span></button>
+    </details>
+    <div class="cta-wrap"><button id="goBtn" class="cta" disabled>게시물 만들기 <span class="cost">1회 차감</span></button>
+    <p class="cta-note">약 30초~1분 · 생성에 실패하면 횟수가 차감되지 않아요</p></div>
     <div id="msg" class="note"></div>
   </div>
   <div id="gallery" class="gallery hidden"></div>
+  <section class="how">
+    <h3>이렇게 써요</h3>
+    <ol><li><b>사진 1장 올리기</b><span>폰으로 대충 찍은 사진도 괜찮아요</span></li><li><b>1분 기다리기</b><span>연출 사진과 글을 한 번에 만들어요</span></li><li><b>복사해서 붙여넣기</b><span>인스타·네이버 블로그에 그대로 올려요</span></li></ol>
+  </section>
+  <section class="price-sum">
+    <h3>가격</h3>
+    <div class="ps"><div><b>Go</b><span>5회 · 4,500원</span></div><div class="pick"><b>베이직</b><span>20회 · 16,900원</span><em>첫 구매 할인</em></div><div><b>프로</b><span>60회 · 49,000원</span></div></div>
+    <p class="note">인스타 게시물 1회 차감 · 블로그 글 2회 차감 · 이용권은 계정에 저장돼요</p>
+  </section>
+  <section class="faq">
+    <h3>자주 묻는 질문</h3>
+    <details><summary>사진은 어디에 저장되나요?</summary><p>올린 사진은 콘텐츠를 만드는 데만 쓰고 서버에 저장하지 않아요. 만들어진 사진은 화면에서 바로 저장하세요.</p></details>
+    <details><summary>결과가 마음에 안 들면요?</summary><p>선택한 사진을 "더 밝게", "배경 심플하게"처럼 다듬거나 새 후보를 다시 만들 수 있어요(1회 차감). 생성 자체가 실패하면 차감되지 않아요.</p></details>
+    <details><summary>무료 3회는 어떻게 받나요?</summary><p>카카오·네이버·구글로 로그인하면 바로 3회를 쓸 수 있어요. 첫 구매 때는 베이직 할인도 받을 수 있어요.</p></details>
+  </section>
 </section>
 
 <section id="res" class="hidden">
@@ -124,8 +157,9 @@
 </div>
 <script src="/app.js?v=7"></script>
 <script src="/live.js?v=16"></script>
-<script src="/login.js?v=4"></script>
+<script src="/login.js?v=5"></script>
 <script src="/cases.js?v=1"></script>
+<script src="/home.js?v=1"></script>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "df90c3cbbb1741b59357c116347a552d"}'></script>
 </body>
 </html>

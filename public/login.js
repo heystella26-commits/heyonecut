@@ -22,7 +22,7 @@
   const LN = { kakao: "카카오", naver: "네이버", google: "구글" };
   window.refreshUser = () => fetch("/api/quota", { cache: "no-store" }).then(r => r.json()).then(q => {
     showQuota(q.left);
-    slot.innerHTML = q.user ? `<span class="lgname">${esc(q.user.name || LN[q.user.provider] + " 사용자")}님<a href="/api/auth/logout">로그아웃</a><a href="javascript:void(0)" onclick="deleteAccount()">탈퇴</a></span>` : `<button class="lgbtn" onclick="openLogin()">로그인 · 무료 3회</button>`;
+    slot.innerHTML = q.user ? `<span class="lgname">${esc(q.user.name || LN[q.user.provider] + " 사용자")}님<a href="/api/auth/logout">로그아웃</a><a href="javascript:void(0)" onclick="deleteAccount()">탈퇴</a></span>` : `<button class="lgbtn" onclick="openLogin()">로그인<span class="lg-sub"> · 무료 3회</span></button>`;
     window.__user = q.user;
     const pm = document.getElementById("payLoginHint"); if (pm) pm.style.display = q.user ? "none" : "";
   }).catch(() => {});
