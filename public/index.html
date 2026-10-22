@@ -5,9 +5,10 @@
 <title>헤이원컷 HEY 1/CUT – 사진 한 장이면 콘텐츠가 알아서</title>
 <link rel="icon" href="/mark.svg?v=4" type="image/svg+xml">
 <style>.logo img{width:28px;height:28px}.logo img.wm{width:auto;height:24px}.logo{font-weight:800;letter-spacing:-.6px}</style>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/app.css?v=6">
 <link rel="stylesheet" href="/prog.css?v=9">
-<link rel="stylesheet" href="/home.css?v=1">
+<link rel="stylesheet" href="/home.css?v=2">
 </head>
 <body>
 <div class="top">
@@ -18,26 +19,26 @@
 <section id="form">
   <header class="hero">
     <div class="hero-copy">
-      <p class="eyebrow">카페 · 네일 · 꽃집 · 쇼핑몰 사장님을 위한</p>
-      <h1>사진 <em>한 장</em> 올리면<br>인스타·블로그 글이 <em>1분</em> 만에</h1>
-      <p class="sub">폰으로 찍은 사진 1장으로 연출 사진을 새로 만들고, 캡션·해시태그·블로그 글까지 바로 붙여넣게 써 드려요.</p>
-      <div class="hero-badges"><span class="hb hot">로그인하면 무료 3회</span><span class="hb">첫 구매 베이직 할인</span><span class="hb">실패하면 차감 안 돼요</span></div>
+      <span class="pill">✦ 카페 · 네일 · 꽃집 · 쇼핑몰 사장님을 위한</span>
+      <h1>사진 한 장이면<br><span class="grad">게시물 끝.</span></h1>
+      <p class="sub">연출 사진, 캡션, 해시태그, 블로그 글까지 1분이면 돼요.</p>
+      <nav class="tabs" aria-label="만들 콘텐츠">
+        <button class="tab on" id="tabIg" onclick="setMode('ig')">📸 인스타그램<i>1회</i></button>
+        <button class="tab" id="tabBlog" onclick="setMode('blog')">📝 블로그<i>2회</i></button>
+      </nav>
+      <input type="file" id="file" accept="image/*" hidden>
+      <div class="upbox"><div id="drop"><div class="drop-in"><b>＋ 사진 올리기</b><span>누르거나 끌어다 놓으세요</span></div></div><button type="button" class="upgo" onclick="document.getElementById('file').click()">올리기 →</button></div>
+      <p class="drop-help">사진이 없나요? <button type="button" id="sampleBtn">예시 사진으로 해 보기</button></p>
+      <div class="trust"><span><b>무료 3회</b> 로그인 시</span><span><b>1분</b> 평균 완성</span><span><b>실패 시</b> 차감 없음</span></div>
     </div>
     <a class="hero-demo" href="/cases#full-y2k" aria-label="실제 사례 보기">
-      <figure><img src="/cases/y2k-0.jpg" alt="올린 사진"><figcaption>올린 사진</figcaption></figure>
-      <span class="hero-arrow" aria-hidden="true">→</span>
-      <figure class="stack"><img src="/cases/y2k-3.jpg" alt="만들어진 플랫레이"><img src="/cases/y2k-1.jpg" alt="만들어진 디테일 컷"><figcaption>만들어진 사진 + 블로그 글</figcaption></figure>
+      <div class="o"><div class="lab">올린 사진</div><img src="/cases/y2k-0.jpg" alt="올린 사진"></div>
+      <div class="r"><div class="lab c">✨ 만들어진 게시물</div><img src="/cases/y2k-1.jpg" alt="만들어진 사진"><div class="dcap">연남동 골목에서 찾은 2000년대 감성 💗 트랙 재킷 하나로 완성한 Y2K 데일리룩<br><em>#연남동패션 #Y2K코디 #데일리룩</em></div></div>
+      <span class="arr" aria-hidden="true">→</span>
     </a>
   </header>
-  <nav class="tabs" aria-label="만들 콘텐츠">
-    <button class="tab on" id="tabIg" onclick="setMode('ig')"><b>📸 인스타그램</b><small>사진 2장 + 캡션·해시태그·DM</small><i>1회</i></button>
-    <button class="tab" id="tabBlog" onclick="setMode('blog')"><b>📝 블로그</b><small>네이버용 · 사진 3~5장 + 글 1,000자</small><i>2회</i></button>
-  </nav>
   <div class="panel">
     <h2 id="formTitle">인스타그램 게시물 만들기</h2>
-    <input type="file" id="file" accept="image/*" hidden>
-    <div id="drop"><div class="drop-in"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><b>사진 올리기</b><span>누르거나 끌어다 놓으세요 · 휴대폰은 촬영도 돼요</span></div></div>
-    <p class="drop-help">사진이 없나요? <button type="button" id="sampleBtn">예시 사진으로 해 보기</button></p>
     <div class="two">
       <div><label>상호명</label><input id="bizName" placeholder="예: 연남동 오후세시"></div>
       <div id="handleWrap"><label>인스타 계정</label><input id="handle" placeholder="예: ohusesi_cafe"></div>
