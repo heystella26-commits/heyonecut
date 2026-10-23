@@ -112,3 +112,9 @@ details.more summary small{display:block;font-weight:500;margin-top:2px}
 .pf-btn{flex:none;background:#ff5a36;color:#fff;font-weight:800;font-size:17px;border-radius:99px;padding:16px 26px}
 .pf-banner:hover .pf-btn{background:#e5401c}
 @media (max-width:760px){.pf-banner{flex-direction:column;align-items:stretch;padding:26px 22px;margin:22px 0 0}.pf-btn{text-align:center}}
+/* 섹션 폭 통일: 첫 화면(hero) 기준 */
+main{max-width:1152px}
+#res,#bres{max-width:1008px;margin-left:auto;margin-right:auto}
+#form>.hero,#form>.panel,#form>.pf-banner,#form>.gallery,#form>.how,#form>.price-sum,#form>.faq{max-width:none;width:100%;margin-left:0;margin-right:0;box-sizing:border-box}
+#form>.panel{padding:28px 32px}
+@media (max-width:520px){#form>.panel{padding:16px}}
