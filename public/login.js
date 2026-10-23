@@ -11,9 +11,9 @@
   document.querySelector(".topr")?.appendChild(slot);
   window.openLogin = () => m.classList.remove("hidden");
   window.deleteAccount = async () => {
-    if (!confirm("탈퇴하면 계정 정보와 남은 이용권이 바로 삭제되고 되돌릴 수 없어요. 탈퇴할까요?")) return;
+    if (!confirm("탈퇴하면 바로 로그아웃되고, 7일 뒤 계정 정보·남은 이용권·보관함 결과물이 모두 삭제돼요.\n7일 안에 같은 계정으로 다시 로그인하면 탈퇴가 취소돼요. 탈퇴할까요?")) return;
     const r = await fetch("/api/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "delete" }) });
-    alert(r.ok ? "탈퇴가 완료됐어요. 그동안 이용해 주셔서 감사합니다." : "탈퇴 처리 중 문제가 생겼어요. heystella26@gmail.com 으로 알려 주세요.");
+    alert(r.ok ? "탈퇴 신청이 완료됐어요. 7일 뒤 모든 정보가 삭제돼요. 그동안 이용해 주셔서 감사합니다." : "탈퇴 처리 중 문제가 생겼어요. heystella26@gmail.com 으로 알려 주세요.");
     location.href = "/";
   };
   // 로그인 안 한 사람이 횟수가 없으면 결제창 대신 로그인(무료 3회)부터
@@ -34,7 +34,7 @@
   const qs = new URLSearchParams(location.search);
   if (qs.has("login") || qs.has("login_err") || qs.has("logout") || qs.has("granted")) {
     const err = qs.get("login_err");
-    const msg = err ? "⚠️ " + err : qs.has("login") ? "✅ 로그인했어요. 이용권이 계정에 저장돼요." : qs.has("logout") ? "로그아웃했어요." : "✅ 이용권 " + qs.get("granted") + "회가 충전됐어요.";
+    const msg = err ? "⚠️ " + err : qs.has("restored") ? "✅ 다시 오셨네요! 탈퇴 신청이 취소됐어요." : qs.has("login") ? "✅ 로그인했어요. 이용권이 계정에 저장돼요." : qs.has("logout") ? "로그아웃했어요." : "✅ 이용권 " + qs.get("granted") + "회가 충전됐어요.";
     const t = document.createElement("div");
     t.style.cssText = "position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#111;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:99";
     t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3500);

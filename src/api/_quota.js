@@ -35,7 +35,7 @@ export const loadUser = uid => getJSON("users/" + uid);
 export const saveUser = u => putJSON("users/" + u.uid, u);
 export async function readQuota(req) {
   const uid = sessionUid(req);
-  if (uid) { const u = await loadUser(uid); if (u) return { id: u.uid, used: u.used || 0, credits: u.credits || 0, claimed: u.claimed || [], user: u }; }
+  if (uid) { const u = await loadUser(uid); if (u && !u.deleteAt) return { id: u.uid, used: u.used || 0, credits: u.credits || 0, claimed: u.claimed || [], user: u }; }
   return readCookieQ(req);
 }
 export async function writeQuota(res, q) {

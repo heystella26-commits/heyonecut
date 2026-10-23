@@ -50,11 +50,12 @@ export default async function handler(req, res) {
     const existing = await loadUser(uid);
     const u = existing || { uid, provider: name, credits: 0, used: 0, claimed: [], created: Date.now() };
     await track(existing ? "login" : "signup", { id: uid, member: true, kind: name });
+    const restored = !!u.deleteAt; delete u.deleteAt;
     Object.assign(u, { name: me.name || u.name || "", email: me.email || u.email || "", lastLogin: Date.now() });
     await mergeIntoUser(req, res, u);
     setSession(res, uid);
     addCookie(res, `sp_st=; Path=/api/auth; Max-Age=0`);
-    return back(res, "login=1");
+    return back(res, restored ? "login=1&restored=1" : "login=1");
   } catch (e) {
     return back(res, "login_err=" + encodeURIComponent("로그인 실패: " + e.message));
   }
