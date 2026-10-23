@@ -65,7 +65,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--coral);outline-offs
 <div class="wrap">
 <a class="brand" href="/" style="color:inherit;text-decoration:none">헤이<i>/</i>원컷</a>
 <section class="hero">
-<h1>사진 <em>한 장</em> 올리면,<br>블로그 사진 세트와 글이 같이 나와요</h1>
+<h1>사진 <em>한 장</em> 올리면,<br>인스타·블로그 사진과 글이 같이 나와요</h1>
 <p>폰으로 찍은 사진 1장으로 디테일컷·로우앵글컷·플랫레이를 새로 만들고, 사진 자리까지 정리된 네이버 블로그 글 1,000자를 함께 써 줘요. 아래는 실제로 헤이원컷에서 만든 결과물이에요.</p>
 <div class="chips"><span>사진 1장 → 3~5컷</span><span>블로그 글 1,000자</span><span>인스타 캡션·해시태그</span><span>로그인하면 무료 3회</span></div>
 </section>
@@ -79,10 +79,11 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--coral);outline-offs
 </section>
 <p class="foot">예시 속 인물은 AI로 만든 가상 인물이에요. 결과물은 사진과 요청에 따라 달라질 수 있어요.</p>
 </div>
-<script src="/cases.js?v=1"></script>
+<script src="/cases.js?v=2"></script>
 <script>
 (async () => {
-  const { E, chars, gens, bodyHtml } = window.HOC_CASES;
+  const { E, chars, gens, bodyHtml, isIg, meta, igHtml, IGCSS } = window.HOC_CASES;
+  { const st = document.createElement("style"); st.textContent = IGCSS + ".kicker.ig{color:#d62976}"; document.head.appendChild(st); }
   const me = await fetch("/api/quota", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
   const admin = !!me.user?.admin;
   document.getElementById("adminbar").hidden = !admin;
@@ -98,13 +99,13 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--coral);outline-offs
       <header class="ch"><span class="no">사례 ${n + 1}</span><span class="tag">${E(c.tag)}</span>${admin ? `<span class="adm"><button data-mv="up" data-id="${E(c.id)}" ${n ? "" : "disabled"}>↑ 위로</button><button data-mv="down" data-id="${E(c.id)}" ${n < list.length - 1 ? "" : "disabled"}>↓ 아래로</button><button class="del" data-del="${E(c.id)}">삭제</button>${n < 3 ? "· 첫 화면 노출" : ""}</span>` : ""}</header>
       <div class="flow"><figure class="orig"><div class="badge">올린 사진 1장</div><img src="${E(c.orig)}" alt="올린 사진"></figure>
       <div class="arrow" aria-hidden="true"><span>헤이원컷</span><svg viewBox="0 0 48 16"><path d="M0 8h44M37 2l7 6-7 6" fill="none" stroke="currentColor" stroke-width="2"/></svg><small>약 1분</small></div>
-      <div class="out"><div class="badge alt">만들어진 블로그 사진</div><div class="gens">${gens(c).map(im => `<figure class="g"><img src="${E(im.src)}" alt="${E(im.kind)}" loading="lazy"><figcaption><b>${E(im.kind)}</b></figcaption></figure>`).join("")}</div></div></div>
-      <div class="post"><p class="kicker">함께 만들어진 블로그 글 · 본문 ${chars(c).toLocaleString()}자 · 사진 ${(c.images || []).length}장</p>
+      <div class="out"><div class="badge alt">${isIg(c) ? "만들어진 인스타 사진" : "만들어진 블로그 사진"}</div><div class="gens">${gens(c).map(im => `<figure class="g"><img src="${E(im.src)}" alt="${E(im.kind)}" loading="lazy"><figcaption><b>${E(im.kind)}</b></figcaption></figure>`).join("")}</div></div></div>
+      <div class="post"><p class="kicker${isIg(c) ? " ig" : ""}">${isIg(c) ? "함께 만들어진 인스타 게시물 · " : "함께 만들어진 블로그 글 · "}${meta(c)}</p>
       <h3><a class="open" href="#full-${E(c.id)}" data-open="full-${E(c.id)}">${E(c.title)}</a></h3>
-      <a class="more" href="#full-${E(c.id)}" data-open="full-${E(c.id)}">원문 전체 보기 →</a></div></article>`).join("");
+      <a class="more" href="#full-${E(c.id)}" data-open="full-${E(c.id)}">${isIg(c) ? "게시물 전체 보기 →" : "원문 전체 보기 →"}</a></div></article>`).join("");
     document.getElementById("readers").innerHTML = list.map(c => `<section class="reader" id="full-${E(c.id)}" hidden aria-label="블로그 원문">
-      <div class="rbar"><button type="button" class="close">← 사례로 돌아가기</button><span class="rmeta">헤이원컷이 쓴 네이버 블로그 글 · 본문 ${chars(c).toLocaleString()}자</span></div>
-      <article class="rpost"><p class="nblog">N 블로그 미리보기</p><h2>${E(c.title)}</h2>${bodyHtml(c)}
+      <div class="rbar"><button type="button" class="close">← 사례로 돌아가기</button><span class="rmeta">${isIg(c) ? "헤이원컷이 만든 인스타그램 게시물 패키지" : `헤이원컷이 쓴 네이버 블로그 글 · 본문 ${chars(c).toLocaleString()}자`}</span></div>
+      <article class="rpost"><p class="nblog"${isIg(c) ? ' style="color:#d62976"' : ""}>${isIg(c) ? "📸 인스타그램 미리보기" : "N 블로그 미리보기"}</p><h2>${E(c.title)}</h2>${isIg(c) ? igHtml(c) : bodyHtml(c)}
       <p class="rnote">이 글과 사진은 사진 1장을 올린 뒤 헤이원컷이 한 번에 만든 결과예요. (확인 필요) 표시는 검색으로 확인되지 않은 정보를 지어내지 않고 비워 둔 자리예요.</p></article></section>`).join("");
     document.querySelectorAll("[data-open]").forEach(a => a.onclick = e => { e.preventDefault(); show(a.dataset.open); try { history.replaceState(null, "", "#" + a.dataset.open); } catch {} });
     document.querySelectorAll(".reader .close").forEach(b => b.onclick = hide);

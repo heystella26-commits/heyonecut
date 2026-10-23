@@ -44,6 +44,7 @@ export default async function handler(req, res) {
     const images = [];
     for (const [k, im] of c.images.slice(0, 6).entries()) if (im.src) images.push({ slot: +im.slot || k + 1, kind: clean(im.kind, 40), src: await save(im.src, k + 1) });
     const item = { id, tag: clean(c.tag, 40) || "사례", title: clean(c.title, 120), body: clean(c.body, 8000), tags: (c.tags || []).slice(0, 30).map(t => clean(t, 30)), orig, images, created: Date.now() };
+    if (c.type === "ig") Object.assign(item, { type: "ig", handle: clean(c.handle, 40), caption: clean(c.caption, 3000), comment: clean(c.comment, 1000), dm: clean(c.dm, 1500), postTime: clean(c.postTime, 200) });
     list = [item, ...list];
     await putJSON(LIST, list);
     return res.status(200).json({ ok: true, id });
