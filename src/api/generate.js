@@ -2,6 +2,7 @@ import { checkQuota, useQuota } from "./_quota.js";
 import { track } from "./_track.js";
 import { toEnglish, editImage, claudeStream, grab } from "./_ai.js";
 import { signTicket } from "./_quota.js";
+import { pickShots, shotPrompt, looksLikePeople } from "./_shots.js";
 // SnapPack MVP - 사진 1장 → 콘텐츠 패키지 생성 API
 // 환경변수: ANTHROPIC_API_KEY (필수), AI_GATEWAY_API_KEY (이미지), FAL_KEY (선택)
 
@@ -98,11 +99,9 @@ export default async function handler(req, res) {
     if (!token) return { error: "이미지 키 없음" };
     const info = [bizName && `Shop: ${bizName}`, industry && `Industry: ${industry}`, bizDesc && `Service: ${bizDesc}`, tone && `Tone: ${tone}`].filter(Boolean).join(". ");
     const custom = order ? ` Customer's own request (must follow): ${await toEnglish(order)}.` : "";
-    const keep = "Keep the main subject exactly as it is (the same food, product, flowers, or hands and nails — same shape, colors and details). Do not add any text or logos.";
-    const jobs = [
-      { label: "A · 브랜드 무드", prompt: `Move the main subject into a completely new setting: ${pickA()}. Remove all clutter (cables, receipts, boxes, machines). Professional shop photo${info ? ` for ${info}` : ""}. ${keep}${custom}` },
-      { label: "B · 인스타그래머블", prompt: `Restage the main subject as a trendy Instagram photo: place it ${pickB()}, with 2-3 props that fit this kind of business. Remove all clutter (cables, receipts, boxes, machines). Vertical 4:5 composition.${info ? ` Brand: ${info}.` : ""} ${keep}${custom}` },
-    ];
+    // 블로그처럼 컷 종류(앵글·구도·포즈)가 서로 다른 2장
+    const people = looksLikePeople(industry, bizDesc, product);
+    const jobs = pickShots(2, { people }).map(sh => ({ label: sh.label, prompt: shotPrompt(sh, { info, custom, people }) }));
     const src = `data:${mediaType};base64,${image}`;
     let lastErr;
     for (const m of ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"]) {

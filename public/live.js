@@ -14,7 +14,7 @@ async function readNdjson(r, onEv) {
     while ((i = buf.indexOf("\n")) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 1); if (line.trim()) onEv(JSON.parse(line)); }
   }
 }
-PLANS_T["ig-img"] = { secs: 8, steps: ["A·B 이미지 마무리"] };
+PLANS_T["ig-img"] = { secs: 8, steps: ["다른 앵글 사진 마무리"] };
 async function runIg() {
   const btn = $("goBtn"); btn.disabled = true;
   const stop = startProgress($("msg"), "ig");
@@ -42,7 +42,7 @@ async function runIg() {
     state.p.timing = { text: pack.text_secs, total: imgs?.secs, model: pack.text_model };
     state.gen = [...(imgs?.images || [])]; state.lab = [...(imgs?.image_labels || [])];
     if (imgs?.image_error) state.p.image_error = imgs.image_error;
-    busy(false, state.gen.length ? "✅ A·B 이미지가 도착했어요." : "⚠️ " + esc(imgs?.image_error || "이미지를 만들지 못했어요."));
+    busy(false, state.gen.length ? "✅ 서로 다른 앵글의 사진 2장이 도착했어요." : "⚠️ " + esc(imgs?.image_error || "이미지를 만들지 못했어요."));
     setSlides(0);
   } catch (e) {
     stop(); if (onRes) busy(false, "⚠️ " + esc(e.message)); else $("msg").textContent = "오류: " + e.message;

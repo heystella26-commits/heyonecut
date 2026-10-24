@@ -48,8 +48,8 @@ const info = () => ({ bizName: val("bizName"), bizDesc: val("bizDesc"), location
 const PLANS_T = {
   ig:     { secs: 32, steps: ["사진 분석", "캡션·해시태그 작성", "댓글·DM 작성", "이미지 2장 생성", "마무리"] },
   blog:   { secs: 55, steps: ["가게 정보 검색", "본문 작성", "사진 자리 추천", "사진 3~5장 생성", "마무리"] },
-  refine: { secs: 12, steps: ["요청 해석", "사진 다듬는 중", "마무리"] },
-  regen:  { secs: 14, steps: ["새 구도 고르기", "A·B 이미지 생성", "마무리"] },
+  refine: { secs: 14, steps: ["요청 해석", "2가지 버전 다듬는 중", "마무리"] },
+  regen:  { secs: 14, steps: ["새 앵글 고르기", "다른 컷 2장 생성", "마무리"] },
 };
 const TIPS = ["창을 닫거나 새로고침하면 결과가 사라져요 🙏", "완료되면 바로 이 화면에 결과가 떠요", "평균 시간보다 조금 더 걸릴 수 있어요", "생성이 실패하면 횟수는 차감되지 않아요"];
 let progTimer = null;
@@ -152,9 +152,9 @@ async function regen() {
     const j = await callImage({ mode: "regen", image: state.img, mediaType: "image/jpeg",
       ctx: { bizName: val("bizName"), bizDesc: val("bizDesc"), industry: val("industry") || state.p?.analysis?.industry,
         tone: val("tone"), mood: state.p?.analysis?.mood, brand_mood: ip.brand_mood, instagrammable: ip.instagrammable, order: val("imageOrder") } });
-    state.gen = [...j.images, ...state.gen].slice(0, 9);
-    state.lab = [...(j.labels || j.images.map(() => "새 후보")), ...state.lab].slice(0, 9);
-    setSlides(0); busy(false, "✅ 새 A·B 후보가 나왔어요. (1회 차감)");
+    state.gen = [...j.images, ...state.gen].slice(0, 12);
+    state.lab = [...(j.labels || j.images.map(() => "새 후보")), ...state.lab].slice(0, 12);
+    setSlides(0); busy(false, "✅ 다른 앵글의 새 사진 2장이 나왔어요. (1회 차감)");
   } catch (e) { busy(false, "⚠️ " + esc(e.message)); }
   updateGo();
 }
@@ -178,14 +178,14 @@ async function refine() {
   busy(true, "refine");
   try {
     const j = await callImage({ mode: "refine", source, instruction: text });
-    const img = j.images[0];
-    const lab = "✨ " + (t || document.querySelector("#chips button.on")?.textContent.replace(/^\S+\s/, "") || "다듬음").slice(0, 12);
-    if (k < state.gen.length) { state.gen.splice(k, 0, img); state.lab.splice(k, 0, lab); }
-    else { state.gen.push(img); state.lab.push(lab); }
-    state.gen = state.gen.slice(0, 9); state.lab = state.lab.slice(0, 9);
+    const name = (t || document.querySelector("#chips button.on")?.textContent.replace(/^\S+\s/, "") || "다듬음").slice(0, 12);
+    const imgs = j.images || [], labs = imgs.map((_, n) => "✨ " + name + (imgs.length > 1 ? " " + (n + 1) : ""));
+    if (k < state.gen.length) { state.gen.splice(k, 0, ...imgs); state.lab.splice(k, 0, ...labs); }
+    else { state.gen.push(...imgs); state.lab.push(...labs); }
+    state.gen = state.gen.slice(0, 12); state.lab = state.lab.slice(0, 12);
     setSlides(Math.min(k, state.gen.length - 1));
     document.querySelectorAll("#chips button.on").forEach(b => b.classList.remove("on")); $("refineTxt").value = "";
-    busy(false, `✅ 다듬었어요! (1회 차감) 이전 사진(${esc(baseLab)})은 목록 바로 뒤에 있어요.`);
+    busy(false, `✅ 다듬은 사진 ${imgs.length}장이 나왔어요! (1회 차감) 이전 사진(${esc(baseLab)})은 그 바로 뒤에 있어요.`);
   } catch (e) { busy(false, "⚠️ " + esc(e.message)); }
   updateGo();
 }
@@ -220,7 +220,7 @@ function render(p) {
       <div class="step">② 직접 적어도 돼요 (선택)</div>
       <input id="refineTxt" placeholder="예: 접시를 흰색으로, 배경에 창가 햇살" oninput="updateGo()" onkeydown="if(event.key==='Enter'&&!$('goRefine').disabled)refine()">
       <button class="go" id="goRefine" onclick="refine()" disabled>✨ 위에서 요청을 고르거나 적어 주세요 <span class="cost">1회 차감</span></button>
-      <button class="regen" onclick="regen()">🔄 A·B 후보 새로 만들기 <span class="cost">1회 차감</span></button>
+      <button class="regen" onclick="regen()">🔄 다른 앵글로 2장 더 만들기 <span class="cost">1회 차감</span></button>
       <div id="imgMsg" class="note"></div>
     </div></div>`;
   h += box("캡션 + 해시태그", cap + "\n\n" + tags.join(" "));

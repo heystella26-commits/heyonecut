@@ -1,5 +1,6 @@
 import { checkQuota, useQuota } from "./_quota.js";
 import { toEnglish, editImage } from "./_ai.js";
+import { pickShots, shotPrompt, looksLikePeople } from "./_shots.js";
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
 
@@ -43,17 +44,18 @@ export default async function handler(req, res) {
     if (!src) return res.status(400).json({ error: "다듬을 이미지가 없습니다." });
     if (!instruction.trim()) return res.status(400).json({ error: "어떻게 다듬을지 적어 주세요." });
     const en = await toEnglish(instruction);
-    jobs = [{ label: "다듬음", src, prompt: `Edit this photo: ${en}. Make these changes clearly visible while keeping the result photorealistic and high quality. Keep the main subject itself (its shape and details) recognizable. Do not add text or logos.` }];
+    const base = `Edit this photo: ${en}. Make these changes clearly visible while keeping the result photorealistic and high quality. Keep the main subject itself (its shape and details) recognizable. Do not add text or logos.`;
+    // 다듬기는 2가지 버전: 원래 구도 유지 / 같은 요청 + 살짝 다른 구도
+    jobs = [{ label: "다듬음 1", src, prompt: base + " Keep the original composition and camera angle." },
+      { label: "다듬음 2", src, prompt: base + " Also try a slightly different framing and camera angle (a bit closer or from a different side) so it feels like a second take." }];
   } else {
     if (!image) return res.status(400).json({ error: "원본 사진이 없습니다." });
     const src = `data:${mediaType};base64,${image}`;
     const info = [ctx.bizName && `Shop: ${ctx.bizName}`, ctx.industry && `Industry: ${ctx.industry}`, ctx.bizDesc && `Service: ${ctx.bizDesc}`,
       ctx.tone && `Tone: ${ctx.tone}`, ctx.mood && `Mood: ${ctx.mood}`].filter(Boolean).join(". ");
     const custom = ctx.order ? ` Customer's own request (must follow): ${await toEnglish(ctx.order)}.` : "";
-    jobs = [
-      { label: "A · 브랜드 무드", src, prompt: `Move the main subject into a completely new setting: ${pickA()}, ${pick(MOOD_VARIANTS)}. Remove all clutter (cables, receipts, boxes, machines). Professional shop photo for: ${info}. ${keep}${custom}` },
-      { label: "B · 인스타그래머블", src, prompt: `Restage the main subject as a trendy Instagram photo: place it ${pick(IG_VARIANTS)}. Remove all clutter (cables, receipts, boxes, machines). Vertical 4:5 composition. Brand: ${info}. ${keep}${custom}` },
-    ];
+    const people = looksLikePeople(ctx.industry, ctx.bizDesc, ctx.mood);
+    jobs = pickShots(2, { people }).map(sh => ({ label: sh.label, src, prompt: shotPrompt(sh, { info, custom, people }) }));
   }
 
   let lastErr;
