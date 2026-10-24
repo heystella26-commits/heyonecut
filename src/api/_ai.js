@@ -111,3 +111,34 @@ space (shop interior or exterior is the subject)` }] }] }),
     return w.find(x => PHOTO_KINDS.includes(x)) || null;
   } catch { return null; }
 }
+
+const IMG_MODELS = ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"];
+// 한 장씩 모델을 바꿔 가며 시도 (한 장이 실패해도 다른 장은 그대로)
+export async function editWithFallback(token, prompt, src) {
+  let last;
+  for (const m of IMG_MODELS) { try { return { src: await editImage(token, m, prompt, src), model: m }; } catch (e) { last = e; } }
+  throw last || new Error("이미지 생성 실패");
+}
+
+// 블로그처럼: 사진을 보고 이 사진에 맞는 인스타 컷 2개를 구체적으로 설계 (영어 프롬프트)
+export async function planShots(image, mediaType, { kind, menu, info = "", order = "" }) {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: process.env.CLAUDE_PLAN_MODEL || "claude-sonnet-5-5", max_tokens: 900, messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: image } },
+        { type: "text", text: `You are a professional Instagram photographer for a Korean small business (${kind}).${info ? ` Business: ${info}.` : ""}${order ? ` Owner's request (must follow): ${order}.` : ""}
+Look at this photo and plan 2 NEW Instagram photos of the same subject that look like a real pro shoot. Pick the 2 shots from this menu that suit THIS photo best, and make them clearly different from each other AND from the original (different camera angle, distance, composition, lighting, background and props):
+${menu.map(([l, p]) => `- ${l}: ${p}`).join("\n")}
+For each, write prompt_en: one detailed English instruction for an image-editing model (camera angle and distance, framing, lens feel, lighting direction and time of day, background/setting, 2-3 props that fit this business, color mood). Describe the subject's look specifically so it stays identical. Never ask to change the subject itself. No text or logos.
+Answer ONLY with JSON: [{"label":"<menu label in Korean>","prompt_en":"..."},{"label":"...","prompt_en":"..."}]` }] }] }),
+      signal: AbortSignal.timeout(20000),
+    });
+    const d = await r.json();
+    const t = (d.content || []).map(b => b.text || "").join("");
+    const arr = JSON.parse(t.slice(t.indexOf("["), t.lastIndexOf("]") + 1));
+    return Array.isArray(arr) && arr.length >= 2 && arr.every(x => x.prompt_en) ? arr.slice(0, 2) : null;
+  } catch { return null; }
+}

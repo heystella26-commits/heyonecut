@@ -62,6 +62,13 @@ const SCENES = {
 };
 const shuffle = a => a.map(x => [Math.random(), x]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
 export const KINDS = Object.keys(C);
+export const menuFor = kind => (C[kind] || C.product).shots;
+// 설계된 프롬프트 → 최종 지시 (블로그 사진 규칙과 같은 형식)
+export function plannedPrompt(kind, prompt, custom = "") {
+  const c = C[kind] || C.product;
+  const noPeople = c.person ? "" : " Do not add any people or faces (a hand only if the instruction asks for it).";
+  return `Using this photo as the reference, create a new photo: ${prompt}. ${c.keep}${noPeople} Photorealistic, natural high-end Instagram photo, vertical 4:5, no text, no logos, no watermarks.${custom}`;
+}
 // 사진 종류가 모를 때 업종 입력으로 추정
 export function kindFromText(...hints) {
   const t = hints.filter(Boolean).join(" ");

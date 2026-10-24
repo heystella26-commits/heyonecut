@@ -1,6 +1,6 @@
 import { checkQuota, useQuota } from "./_quota.js";
-import { toEnglish, editImage, classifyPhoto } from "./_ai.js";
-import { pickShots, shotPrompt, kindFromText, KINDS } from "./_shots.js";
+import { toEnglish, editImage, classifyPhoto, planShots, editWithFallback } from "./_ai.js";
+import { pickShots, shotPrompt, kindFromText, KINDS, menuFor, plannedPrompt } from "./_shots.js";
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
 
@@ -55,20 +55,18 @@ export default async function handler(req, res) {
       ctx.tone && `Tone: ${ctx.tone}`, ctx.mood && `Mood: ${ctx.mood}`].filter(Boolean).join(". ");
     const custom = ctx.order ? ` Customer's own request (must follow): ${await toEnglish(ctx.order)}.` : "";
     const kind = KINDS.includes(ctx.kind) ? ctx.kind : (await classifyPhoto(image, mediaType)) || kindFromText(ctx.industry, ctx.bizDesc);
-    jobs = pickShots(2, kind).map(sh => ({ label: sh.label, src, prompt: shotPrompt(sh, { info, custom }) }));
+    const plan = await planShots(image, mediaType, { kind, menu: menuFor(kind), info, order: ctx.order || "" });
+    jobs = plan ? plan.map(x => ({ label: x.label || "새 컷", src, prompt: plannedPrompt(kind, x.prompt_en, custom) }))
+      : pickShots(2, kind).map(sh => ({ label: sh.label, src, prompt: shotPrompt(sh, { info, custom }) }));
   }
 
-  let lastErr;
-  for (const m of MODELS) {
-    const out = await Promise.allSettled(jobs.map(j => editImage(token, m, j.prompt, j.src)));
-    const images = out.filter(x => x.status === "fulfilled").map(x => x.value);
-    if (images.length) {
-      const trimmed = images.join("").length > 4000000 ? images.slice(0, 1) : images;
-      await useQuota(res, quota, 1, mode === "refine" ? "refine" : "regen");
-      const labels = out.map((x, k) => x.status === "fulfilled" ? (jobs[k].label || "다듬은 이미지") : null).filter(Boolean).slice(0, trimmed.length);
-      return res.status(200).json({ images: trimmed, labels, model: m });
-    }
-    lastErr = out[0].reason;
+  // 2장 각각 모델을 바꿔 가며 시도 → 기본 2장
+  const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, j.src)));
+  const ok = out.map((x, k) => x.status === "fulfilled" ? { ...x.value, label: jobs[k].label } : null).filter(Boolean);
+  if (ok.length) {
+    await useQuota(res, quota, 1, mode === "refine" ? "refine" : "regen");
+    return res.status(200).json({ images: ok.map(o => o.src), labels: ok.map(o => o.label), model: ok[0].model });
   }
+  const lastErr = out[0].reason;
   return res.status(500).json({ error: "이미지 재생성 오류: " + (lastErr?.message || "알 수 없음") });
 }

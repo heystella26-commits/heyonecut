@@ -2,8 +2,8 @@ import { checkQuota, useQuota } from "./_quota.js";
 import { track } from "./_track.js";
 import { toEnglish, editImage, claudeStream, grab } from "./_ai.js";
 import { signTicket } from "./_quota.js";
-import { pickShots, shotPrompt, kindFromText } from "./_shots.js";
-import { classifyPhoto } from "./_ai.js";
+import { pickShots, shotPrompt, kindFromText, menuFor, plannedPrompt } from "./_shots.js";
+import { classifyPhoto, planShots, editWithFallback } from "./_ai.js";
 // SnapPack MVP - 사진 1장 → 콘텐츠 패키지 생성 API
 // 환경변수: ANTHROPIC_API_KEY (필수), AI_GATEWAY_API_KEY (이미지), FAL_KEY (선택)
 
@@ -100,18 +100,17 @@ export default async function handler(req, res) {
     if (!token) return { error: "이미지 키 없음" };
     const info = [bizName && `Shop: ${bizName}`, industry && `Industry: ${industry}`, bizDesc && `Service: ${bizDesc}`, tone && `Tone: ${tone}`].filter(Boolean).join(". ");
     const custom = order ? ` Customer's own request (must follow): ${await toEnglish(order)}.` : "";
-    // 블로그처럼 컷 종류(앵글·구도·포즈)가 서로 다른 2장
     // 사진을 먼저 읽어 종류(음식·카페·패션·네일…)를 정하고, 그 종류에 맞는 컷 2개
     const kind = (await classifyPhoto(image, mediaType)) || kindFromText(industry, bizDesc);
-    const jobs = pickShots(2, kind).map(sh => ({ label: sh.label, prompt: shotPrompt(sh, { info, custom }) }));
+    // 블로그처럼 사진을 보고 컷 2개를 구체적으로 설계 → 실패하면 기본 컷 규칙
+    const plan = await planShots(image, mediaType, { kind, menu: menuFor(kind), info, order });
+    const jobs = plan ? plan.map(x => ({ label: x.label || "새 컷", prompt: plannedPrompt(kind, x.prompt_en, custom) }))
+      : pickShots(2, kind).map(sh => ({ label: sh.label, prompt: shotPrompt(sh, { info, custom }) }));
     const src = `data:${mediaType};base64,${image}`;
-    let lastErr;
-    for (const m of ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"]) {
-      const out = await Promise.allSettled(jobs.map(j => editImage(token, m, j.prompt, src)));
-      const ok = out.map((x, k) => x.status === "fulfilled" ? { src: x.value, label: jobs[k].label } : null).filter(Boolean);
-      if (ok.length) return { images: ok.map(o => o.src), labels: ok.map(o => o.label), model: m, kind };
-      lastErr = out[0].reason;
-    }
+    const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, src)));
+    const ok = out.map((x, k) => x.status === "fulfilled" ? { ...x.value, label: jobs[k].label } : null).filter(Boolean);
+    if (ok.length) return { images: ok.map(o => o.src), labels: ok.map(o => o.label), model: ok[0].model, kind };
+    const lastErr = out[0].reason;
     return { error: "이미지 재생성 오류: " + (lastErr?.message || "알 수 없음") };
   })().catch(e => ({ error: "이미지 재생성 오류: " + e.message }));
 
@@ -168,7 +167,7 @@ export default async function handler(req, res) {
     send({ type: "text", pack });
     const im = await imagesPromise;
     const imgs = im.images || [];
-    send({ type: "done", images: imgs.join("").length > 4000000 ? imgs.slice(0, 1) : imgs, image_labels: im.labels || [], image_model: im.model, image_kind: im.kind, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
+    send({ type: "done", images: imgs, image_labels: im.labels || [], image_model: im.model, image_kind: im.kind, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
   } catch (e) {
     await track("fail", { id: quota.id, member: !!quota.user, kind: "instagram" });
     send({ type: "error", error: e.message, refund: quota.test ? null : signTicket({ k: "refund", uid: quota.id, n: 1, nonce: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), exp: Date.now() + 864e5 }) });
