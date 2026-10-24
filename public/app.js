@@ -150,7 +150,7 @@ async function regen() {
   try {
     const ip = state.p?.image_prompts || {};
     const j = await callImage({ mode: "regen", image: state.img, mediaType: "image/jpeg",
-      ctx: { bizName: val("bizName"), bizDesc: val("bizDesc"), industry: val("industry") || state.p?.analysis?.industry,
+      ctx: { kind: state.imgKind, bizName: val("bizName"), bizDesc: val("bizDesc"), industry: val("industry") || state.p?.analysis?.industry,
         tone: val("tone"), mood: state.p?.analysis?.mood, brand_mood: ip.brand_mood, instagrammable: ip.instagrammable, order: val("imageOrder") } });
     state.gen = [...j.images, ...state.gen].slice(0, 12);
     state.lab = [...(j.labels || j.images.map(() => "새 후보")), ...state.lab].slice(0, 12);

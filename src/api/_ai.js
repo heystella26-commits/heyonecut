@@ -83,3 +83,31 @@ export function grab(partial, key) {
   }
   return { text: out, done: false };
 }
+
+// 사진 종류 판별 (컷 규칙 고르기용): 빠른 모델로 한 단어만
+export const PHOTO_KINDS = ["food", "cafe", "fashion_person", "fashion_item", "nail", "hair", "flower", "product", "space"];
+export async function classifyPhoto(image, mediaType = "image/jpeg") {
+  if (!process.env.ANTHROPIC_API_KEY || !image) return null;
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: process.env.CLAUDE_FAST_MODEL || "claude-haiku-5-5", max_tokens: 10, messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: mediaType, data: image } },
+        { type: "text", text: `Classify the MAIN subject of this photo for a small-business Instagram post. Answer with exactly one word from this list:
+food (meals, grilled meat, noodles, restaurant dishes)
+cafe (coffee, drinks, desserts, bakery, cake)
+fashion_person (a person wearing clothes/outfit is the subject)
+fashion_item (clothes, bags, shoes shown without a person)
+nail (nails, manicure, hands)
+hair (hairstyle, salon result)
+flower (flowers, bouquets, plants)
+product (any other goods: cosmetics, crafts, accessories, gadgets, packaged items)
+space (shop interior or exterior is the subject)` }] }] }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const d = await r.json();
+    const w = (d.content || []).map(b => b.text || "").join(" ").toLowerCase().match(/[a-z_]+/g) || [];
+    return w.find(x => PHOTO_KINDS.includes(x)) || null;
+  } catch { return null; }
+}

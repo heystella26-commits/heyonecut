@@ -1,6 +1,6 @@
 import { checkQuota, useQuota } from "./_quota.js";
-import { toEnglish, editImage } from "./_ai.js";
-import { pickShots, shotPrompt, looksLikePeople } from "./_shots.js";
+import { toEnglish, editImage, classifyPhoto } from "./_ai.js";
+import { pickShots, shotPrompt, kindFromText, KINDS } from "./_shots.js";
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
 
@@ -54,8 +54,8 @@ export default async function handler(req, res) {
     const info = [ctx.bizName && `Shop: ${ctx.bizName}`, ctx.industry && `Industry: ${ctx.industry}`, ctx.bizDesc && `Service: ${ctx.bizDesc}`,
       ctx.tone && `Tone: ${ctx.tone}`, ctx.mood && `Mood: ${ctx.mood}`].filter(Boolean).join(". ");
     const custom = ctx.order ? ` Customer's own request (must follow): ${await toEnglish(ctx.order)}.` : "";
-    const people = looksLikePeople(ctx.industry, ctx.bizDesc, ctx.mood);
-    jobs = pickShots(2, { people }).map(sh => ({ label: sh.label, src, prompt: shotPrompt(sh, { info, custom, people }) }));
+    const kind = KINDS.includes(ctx.kind) ? ctx.kind : (await classifyPhoto(image, mediaType)) || kindFromText(ctx.industry, ctx.bizDesc);
+    jobs = pickShots(2, kind).map(sh => ({ label: sh.label, src, prompt: shotPrompt(sh, { info, custom }) }));
   }
 
   let lastErr;

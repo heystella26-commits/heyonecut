@@ -40,7 +40,7 @@ async function runIg() {
     if (err) throw new Error(err + " (차감된 횟수는 돌려드렸어요)");
     if (!pack) throw new Error("연결이 끊겼어요. 다시 시도해 주세요.");
     state.p.timing = { text: pack.text_secs, total: imgs?.secs, model: pack.text_model };
-    state.gen = [...(imgs?.images || [])]; state.lab = [...(imgs?.image_labels || [])];
+    state.gen = [...(imgs?.images || [])]; state.imgKind = imgs?.image_kind || null; state.lab = [...(imgs?.image_labels || [])];
     if (imgs?.image_error) state.p.image_error = imgs.image_error;
     busy(false, state.gen.length ? "✅ 서로 다른 앵글의 사진 2장이 도착했어요." : "⚠️ " + esc(imgs?.image_error || "이미지를 만들지 못했어요."));
     setSlides(0);
