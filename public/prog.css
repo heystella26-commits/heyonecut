@@ -49,3 +49,5 @@
 .bref-alts button.on{border-color:#ff5a36}.bref-alts img{width:64px;height:80px;object-fit:cover;border-radius:6px;display:block;margin:0!important}
 .bref-alts small{display:block;font-size:10.5px;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bref-msg{font-size:12.5px;color:var(--mut);margin:8px 0 0}
+.bref-pick{display:flex;gap:8px;overflow-x:auto;padding:2px}.bref-pick button{flex:none;border:2px solid transparent;background:none;padding:0;border-radius:8px;cursor:pointer}.bref-pick button.on{border-color:#ff5a36}.bref-pick img{width:62px;height:78px;object-fit:cover;border-radius:6px;display:block}.bref-pick small{display:block;font-size:11px;color:var(--mut);text-align:center}
+#bside .bref-box{margin:8px 0 0;max-width:none}

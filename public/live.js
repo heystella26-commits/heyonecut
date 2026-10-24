@@ -179,6 +179,7 @@ function renderBlog(p) {
       <button class="b" onclick="copyText(${esc(JSON.stringify((p.tags || []).map(t => '#' + String(t).replace(/^#/, '')).join(' ')))},this)">태그 복사</button>
       <button class="b" onclick="saveAll()">⬇️ 사진 전체 저장</button>
     </div>
+    ${blogSideRefine(p)}
     <h3 style="margin-top:16px"><span>추천 사진 구성</span></h3>
     <ol class="plan-list">${(p.images || []).map((im, k) => `<li><b>${esc(im.kind)}</b> — ${esc(im.why)}</li>`).join("")}</ol>
     ${(p.sources || []).length ? `<h3 style="margin-top:16px"><span>참고한 자료</span></h3><ol class="plan-list">${p.sources.slice(0, 6).map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//, "").slice(0, 40))}</a></li>`).join("")}</ol>` : ""}
@@ -199,10 +200,23 @@ function blogRefineUI(im, n) {
     <input type="text" placeholder="직접 적기 (예: 접시를 흰색으로, 더 가까이서)" maxlength="200">
     <button class="b pri" onclick="doBlogRefine(${n})">✨ 사진 ${n} 다듬기 <span class="cost">1회 차감</span></button></div>`;
 }
+// 오른쪽 패널: 사진 골라서 다듬기 (인스타 화면과 같은 방식)
+function blogSideRefine(p) {
+  const ims = (p.images || []).filter(i => i.src); if (!ims.length) return "";
+  if (!ims.some(i => +i.slot === +state.bSel)) state.bSel = ims[0].slot;
+  const cur = blogImg(state.bSel);
+  return `<h3 style="margin-top:16px"><span>✨ 사진 다듬기 <span class="note">· 눌러서 선택</span></span></h3>
+    <div class="bref-pick">${ims.map(i => `<button class="${+i.slot === +state.bSel ? "on" : ""}" onclick="state.bSel=${i.slot};renderBlog(state.blog)"><img src="${i.src}" alt=""><small>사진 ${i.slot}</small></button>`).join("")}</div>
+    ${cur.refining ? `<div class="bref-box"><span class="spin"></span> 사진 ${cur.slot} 다듬는 중… 2가지 버전을 만들고 있어요</div>` : `<div class="bref-box" id="bref-side"><b>선택한 사진: 사진 ${cur.slot} · ${esc(cur.kind)}</b><span class="note">요청을 고르거나 적으면 2가지 버전이 나와요 · 1회 차감</span>
+    <div class="chips">${CHIPS.map(c => `<button type="button" data-v="${esc(c[1])}" onclick="this.classList.toggle('on')">${esc(c[0])}</button>`).join("")}</div>
+    <input type="text" placeholder="직접 적기 (예: 접시를 흰색으로, 더 가까이서)" maxlength="200">
+    <button class="b pri" onclick="doBlogRefine(${cur.slot},'bref-side')">✨ 사진 ${cur.slot} 다듬기 <span class="cost">1회 차감</span></button></div>`}
+    ${cur.rmsg ? `<p class="bref-msg">${cur.rmsg} 본문의 사진 ${cur.slot} 아래에서 버전을 고를 수 있어요.</p>` : ""}`;
+}
 function toggleBlogRefine(n) { const im = blogImg(n); if (!im) return; im.open = !im.open; im.rmsg = ""; renderBlog(state.blog); }
 function pickBlogAlt(n, k) { const im = blogImg(n); if (!im?.alts?.[k]) return; im.src = im.alts[k].src; renderBlog(state.blog); }
-async function doBlogRefine(n) {
-  const im = blogImg(n), box = document.getElementById("bref-" + n); if (!im || !box) return;
+async function doBlogRefine(n, boxId) {
+  const im = blogImg(n), box = document.getElementById(boxId || "bref-" + n); if (!im || !box) return;
   const parts = [...box.querySelectorAll(".chips button.on")].map(b => b.dataset.v);
   const t = box.querySelector("input").value.trim(); if (t) parts.push(t);
   if (!parts.length) { box.querySelector(".note").textContent = "요청을 하나 이상 고르거나 적어 주세요."; return; }
