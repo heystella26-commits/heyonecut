@@ -73,7 +73,7 @@ export async function useQuota(res, q, n = 1, kind = null) {
 }
 export async function status(req) {
   const q = await readQuota(req);
-  return { left: left(q), free: freeLeft(q), credits: q.credits, limit: FREE_LIMIT, user: q.user ? { name: q.user.name || "", provider: q.user.provider, admin: isAdmin(q.user.uid) || undefined } : null };
+  return { left: left(q), free: freeLeft(q), credits: q.credits, limit: FREE_LIMIT, user: q.user ? { name: q.user.name || "", provider: q.user.provider, admin: isAdmin(q.user.uid) || undefined, consent: q.user.consent ? { ver: q.user.consent.ver, train: !!q.user.consent.train } : null } : null };
 }
 export function signTicket(obj) {
   const b = Buffer.from(JSON.stringify(obj)).toString("base64url");

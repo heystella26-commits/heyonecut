@@ -59,7 +59,16 @@ async function load(){
    <div><h2>기능별 사용</h2><div class="card"><table><tr><th>기능</th><th>횟수</th><th>차감</th><th>그중 무료</th></tr>${d.kinds.map(k=>`<tr><td>${KN[k.kind]||k.kind||"기타"}</td><td>${k.c}</td><td>${k.n}</td><td>${k.f}</td></tr>`).join("")||`<tr><td colspan=4>아직 사용이 없어요</td></tr>`}</table>
    <p class="note">무료 차감 ${num(d.freeCreditsUsed)}회 · 유료 차감 ${num(d.creditsUsed-d.freeCreditsUsed)}회 · 생성 실패 ${num(d.fails)}회</p></div></div></div>`;
   h+=`<h2>일별</h2><div class="card"><table><tr><th>날짜</th><th>사용자</th><th>가입</th><th>결제자</th><th>결제액</th><th>차감 횟수</th></tr>${d.daily.map(x=>`<tr><td>${x.day}</td><td>${x.users}</td><td>${x.signups}</td><td>${x.payers}</td><td>${won(x.revenue)}</td><td>${x.credits}</td></tr>`).join("")||`<tr><td colspan=6>기록이 없어요</td></tr>`}</table></div>`;
+  const cl = await fetch("/api/cleanup", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
+  const L = cl.last;
+  h += `<h2>개인정보 자동 삭제</h2><div class="card"><p class="note" style="margin-top:0">매일 새벽 3시 17분 자동 실행 · 보관함 3일, 탈퇴 7일, 결제 기록 5년, 미결제 주문 30일, 학습 데이터 2년, 통계 3년</p>
+    ${L ? `<table><tr><th>마지막 실행</th><th>보관함</th><th>탈퇴 회원</th><th>결제 기록(5년)</th><th>미결제 주문</th><th>학습 데이터</th><th>통계</th></tr><tr><td>${new Date(L.at).toLocaleString("ko-KR")}</td><td>${L.hist}</td><td>${L.users}</td><td>${L.ordersPaid}</td><td>${L.ordersUnpaid}</td><td>${L.train}</td><td>${L.events}</td></tr></table>` : `<p class="note">아직 실행 기록이 없어요.</p>`}
+    <div class="ctl" style="margin-top:10px"><button id="runClean">지금 정리 실행</button><input id="purgeUid" placeholder="삭제 요청 회원 ID (예: kakao_123)" style="min-width:240px"><button id="purgeGo">이 회원 즉시 완전 삭제</button><span id="clMsg" class="note"></span></div>
+    <p class="note">이메일로 탈퇴·삭제 요청이 오면 회원 ID를 넣고 즉시 삭제하세요. 결제 기록은 법에 따라 5년 남아요.</p></div>`;
   $("out").innerHTML=h;
+  $("runClean").onclick = async () => { $("clMsg").textContent = "실행 중…"; const r = await fetch("/api/cleanup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "run" }) }); $("clMsg").textContent = r.ok ? "완료" : "실패"; setTimeout(load, 600); };
+  $("purgeGo").onclick = async () => { const uid = $("purgeUid").value.trim(); if (!uid) return; if ($("purgeGo").dataset.sure !== uid) { $("purgeGo").dataset.sure = uid; $("clMsg").textContent = "한 번 더 누르면 삭제해요"; return; }
+    const r = await fetch("/api/cleanup", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "purge", uid }) }); const d = await r.json().catch(() => ({})); $("clMsg").textContent = r.ok ? `삭제 완료 (보관함 ${d.hist}, 학습 ${d.train})` : (d.error || "실패"); };
 }
 document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-d]").forEach(x=>x.classList.toggle("on",x===b));setRange(+b.dataset.d);load()});
 $("go").onclick=()=>{document.querySelectorAll("[data-d]").forEach(x=>x.classList.remove("on"));load()};

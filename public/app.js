@@ -53,12 +53,19 @@ const PLANS_T = {
 };
 const TIPS = ["창을 닫거나 새로고침하면 결과가 사라져요 🙏", "완료되면 바로 이 화면에 결과가 떠요", "평균 시간보다 조금 더 걸릴 수 있어요", "생성이 실패하면 횟수는 차감되지 않아요"];
 let progTimer = null;
+// 생성 중 개인정보 처리 안내 (로딩 화면에 고지)
+function dataNotice() {
+  const u = window.__user, train = !!u?.consent?.train;
+  return `<div class="pnote">🔒 올린 사진과 입력 내용은 AI 처리를 위해 Anthropic·Vercel·이미지 생성사(미국 등)로 전송되고, 원본 사진은 저장하지 않아요.
+    ${u ? `만든 결과는 <b>내 보관함에 3일</b> 보관 후 자동 삭제돼요. ${train ? "<b>학습 활용에 동의</b>하셔서 생성 이미지(사람 얼굴 사진 제외)는 품질 개선에 2년간 활용돼요." : "생성 이미지는 학습에 쓰지 않아요(동의 안 함)."} <a href="javascript:openConsent('동의 내용을 바꿀 수 있어요.')">설정 바꾸기</a>` : "로그인하지 않으면 결과는 저장되지 않아요."}
+    <a href="/privacy.html" target="_blank">자세히</a></div>`;
+}
 function startProgress(el, kind, small) {
   const plan = PLANS_T[kind], t0 = Date.now();
   el.innerHTML = `<div class="prog ${kind === "blog" ? "blog" : ""} ${small ? "small" : ""}">
     <div class="row"><span class="stage" id="pStage">${plan.steps[0]} 중…</span><span class="eta" id="pEta">약 ${plan.secs}초 남음</span></div>
     <div class="bar"><i id="pBar"></i></div>
-    ${small ? "" : `<div class="steps">${plan.steps.map((s, k) => `<span id="pS${k}">${s}</span>`).join("")}</div><div class="tip" id="pTip">${TIPS[0]}</div>`}
+    ${small ? "" : `<div class="steps">${plan.steps.map((s, k) => `<span id="pS${k}">${s}</span>`).join("")}</div><div class="tip" id="pTip">${TIPS[0]}</div>${dataNotice()}`}
   </div>`;
   if (!small) el.scrollIntoView({ block: "center", behavior: "smooth" });
   window.onbeforeunload = () => "아직 만드는 중이에요. 나가면 결과가 사라져요.";
@@ -177,7 +184,7 @@ async function refine() {
   const k = state.i, source = allImgs()[k], baseLab = allLabs()[k] || "";
   busy(true, "refine");
   try {
-    const j = await callImage({ mode: "refine", source, instruction: text });
+    const j = await callImage({ mode: "refine", source, instruction: text, ctx: { kind: state.imgKind } });
     const name = (t || document.querySelector("#chips button.on")?.textContent.replace(/^\S+\s/, "") || "다듬음").slice(0, 12);
     const imgs = j.images || [], labs = imgs.map((_, n) => "✨ " + name + (imgs.length > 1 ? " " + (n + 1) : ""));
     if (k < state.gen.length) { state.gen.splice(k, 0, ...imgs); state.lab.splice(k, 0, ...labs); }

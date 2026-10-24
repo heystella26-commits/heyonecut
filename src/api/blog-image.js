@@ -1,6 +1,7 @@
 // 블로그 사진 1장 생성 (블로그 글을 만들 때 받은 서명 티켓으로만 가능, 추가 차감 없음)
 import { verifyTicket, readQuota } from "./_quota.js";
-import { editImage } from "./_ai.js";
+import { editImage, classifyPhoto } from "./_ai.js";
+import { saveTraining, wantsTraining } from "./_train.js";
 import { claimOnce, releaseOnce } from "./_store.js";
 const MODELS = ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"];
 export default async function handler(req, res) {
@@ -17,7 +18,14 @@ export default async function handler(req, res) {
   const keep = "Keep the main food/product from the reference photo recognizable (same item, colors and details). Photorealistic, natural Korean blog photo style, no text, no logos, no watermarks.";
   let last;
   for (const m of MODELS) {
-    try { const src = await editImage(token, m, `Using this photo as the reference, create a new photo: ${t.prompt}. ${keep}`, `data:${mediaType};base64,${image}`); return res.status(200).json({ src, model: m }); }
+    try {
+      const prompt = `Using this photo as the reference, create a new photo: ${t.prompt}. ${keep}`;
+      const src = await editImage(token, m, prompt, `data:${mediaType};base64,${image}`);
+      res.status(200).json({ src, model: m });
+      // 학습 동의 회원: 사진 종류를 확인해 사람 얼굴 사진은 빼고 저장
+      if (q.user && (await wantsTraining(q.user.uid))) await saveTraining(q.user.uid, { kind: (await classifyPhoto(image, mediaType)) || "unknown", mode: "blog", model: m, items: [{ src, label: "blog", prompt }] });
+      return;
+    }
     catch (e) { last = e; }
   }
   await releaseOnce(once).catch(() => {});

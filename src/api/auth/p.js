@@ -3,6 +3,7 @@
 import crypto from "node:crypto";
 import { track } from "../_track.js";
 import { addCookie, setSession, clearSession, loadUser, mergeIntoUser } from "../_quota.js";
+import { makeConsent } from "../account.js";
 
 const E = process.env;
 const P = {
@@ -51,10 +52,14 @@ export default async function handler(req, res) {
     const u = existing || { uid, provider: name, credits: 0, used: 0, claimed: [], created: Date.now() };
     await track(existing ? "login" : "signup", { id: uid, member: true, kind: name });
     const restored = !!u.deleteAt; delete u.deleteAt;
+    // 로그인 창에서 고른 동의(필수 3 + 선택: 학습 활용): 쿠키 sp_cs = "1.<0|1>"
+    const cs = /(?:^|;\s*)sp_cs=1\.([01])/.exec(req.headers.cookie || "");
+    if (cs) u.consent = makeConsent(cs[1] === "1", u.consent || {});
     Object.assign(u, { name: me.name || u.name || "", email: me.email || u.email || "", lastLogin: Date.now() });
     await mergeIntoUser(req, res, u);
     setSession(res, uid);
     addCookie(res, `sp_st=; Path=/api/auth; Max-Age=0`);
+    addCookie(res, `sp_cs=; Path=/; Max-Age=0`);
     return back(res, restored ? "login=1&restored=1" : "login=1");
   } catch (e) {
     return back(res, "login_err=" + encodeURIComponent("로그인 실패: " + e.message));

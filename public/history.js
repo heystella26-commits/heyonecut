@@ -13,13 +13,15 @@
   document.head.appendChild(css);
   const m = document.createElement("div"); m.id = "histModal"; m.className = "modal hidden";
   m.onclick = e => { if (e.target === m) m.classList.add("hidden"); };
-  m.innerHTML = `<div class="sheet hsheet"><button class="x" onclick="document.getElementById('histModal').classList.add('hidden')">×</button><h2>📁 내 보관함</h2><p class="note">만든 결과물은 <b>3일 동안</b> 여기에 보관돼요. 3일이 지나면 자동으로 삭제되니 필요한 사진·글은 미리 저장해 두세요.</p><div class="hlist" id="hList"></div></div>`;
+  m.innerHTML = `<div class="sheet hsheet"><button class="x" onclick="document.getElementById('histModal').classList.add('hidden')">×</button><h2>📁 내 보관함</h2><p class="note">만든 결과물은 <b>3일 동안</b> 여기에 보관돼요. 3일이 지나면 자동으로 삭제되니 필요한 사진·글은 미리 저장해 두세요.</p><p class="note" id="hTrain"></p><div class="hlist" id="hList"></div></div>`;
   document.body.appendChild(m);
   const btn = document.createElement("button"); btn.className = "hbtn hidden"; btn.id = "histBtn"; btn.innerHTML = "📁<span class=\"hb-t\"> 보관함</span>"; btn.onclick = openHist;
   const topr = document.querySelector(".topr"); topr?.insertBefore(btn, document.getElementById("lgSlot") || null);
   const left = t => { const h = Math.max(0, Math.round((t - Date.now()) / 36e5)); return h >= 24 ? `${Math.floor(h / 24)}일 ${h % 24}시간 뒤 삭제` : `${h}시간 뒤 삭제`; };
   async function openHist() {
-    m.classList.remove("hidden"); const L = $("hList"); L.innerHTML = '<p class="note">불러오는 중…</p>';
+    m.classList.remove("hidden"); const L = $("hList");
+    const tr = !!window.__user?.consent?.train;
+    $("hTrain").innerHTML = `생성 이미지 학습 활용: <b>${tr ? "동의함" : "동의 안 함"}</b> · <a href="javascript:openConsent('동의 내용을 바꿀 수 있어요. 학습 활용을 끄면 저장된 학습 데이터가 바로 삭제돼요.')">바꾸기</a>`; L.innerHTML = '<p class="note">불러오는 중…</p>';
     const j = await fetch("/api/history", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
     const items = j.items || [];
     L.innerHTML = items.length ? items.map(x => `<div class="hit" data-id="${E(x.id)}">${x.thumb ? `<img src="${E(x.thumb)}" alt="">` : '<span class="ni"></span>'}<span><b>${x.mode === "blog" ? "📝" : "📸"} ${E(x.title || "제목 없음")}</b><small>${new Date(x.created).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} · ${left(x.expires)}</small></span><button class="del" data-del="${E(x.id)}">삭제</button></div>`).join("")

@@ -2,6 +2,7 @@ import { checkQuota, useQuota } from "./_quota.js";
 import { track } from "./_track.js";
 import { toEnglish, editImage, claudeStream, grab } from "./_ai.js";
 import { signTicket } from "./_quota.js";
+import { saveTraining } from "./_train.js";
 import { pickShots, shotPrompt, kindFromText, menuFor, plannedPrompt } from "./_shots.js";
 import { classifyPhoto, planShots, editWithFallback } from "./_ai.js";
 // SnapPack MVP - 사진 1장 → 콘텐츠 패키지 생성 API
@@ -109,7 +110,7 @@ export default async function handler(req, res) {
     const src = `data:${mediaType};base64,${image}`;
     const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, src)));
     const ok = out.map((x, k) => x.status === "fulfilled" ? { ...x.value, label: jobs[k].label } : null).filter(Boolean);
-    if (ok.length) return { images: ok.map(o => o.src), labels: ok.map(o => o.label), model: ok[0].model, kind };
+    if (ok.length) return { images: ok.map(o => o.src), labels: ok.map(o => o.label), prompts: out.map((x, k) => x.status === "fulfilled" ? jobs[k].prompt : null).filter(Boolean), model: ok[0].model, kind };
     const lastErr = out[0].reason;
     return { error: "이미지 재생성 오류: " + (lastErr?.message || "알 수 없음") };
   })().catch(e => ({ error: "이미지 재생성 오류: " + e.message }));
@@ -133,6 +134,7 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Accel-Buffering", "no");
   const send = o => res.write(JSON.stringify(o) + "\n");
+  let trainJob = null;
   send({ type: "start" });
   const model = (quota.test && req.body?.model) || process.env.CLAUDE_MODEL || "claude-sonnet-5-5";
   try {
@@ -167,10 +169,12 @@ export default async function handler(req, res) {
     send({ type: "text", pack });
     const im = await imagesPromise;
     const imgs = im.images || [];
+    trainJob = () => quota.user && imgs.length ? saveTraining(quota.user.uid, { kind: im.kind, mode: "instagram", model: im.model, ctx: { industry, tone }, items: imgs.map((src, k) => ({ src, label: (im.labels || [])[k], prompt: (im.prompts || [])[k] })) }) : null;
     send({ type: "done", images: imgs, image_labels: im.labels || [], image_model: im.model, image_kind: im.kind, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
   } catch (e) {
     await track("fail", { id: quota.id, member: !!quota.user, kind: "instagram" });
     send({ type: "error", error: e.message, refund: quota.test ? null : signTicket({ k: "refund", uid: quota.id, n: 1, nonce: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), exp: Date.now() + 864e5 }) });
   }
   res.end();
+  if (trainJob) await trainJob(); // 학습 동의한 회원만, 응답이 끝난 뒤 저장
 }

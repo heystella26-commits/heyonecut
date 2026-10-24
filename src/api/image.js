@@ -1,5 +1,6 @@
 import { checkQuota, useQuota } from "./_quota.js";
 import { toEnglish, editImage, classifyPhoto, planShots, editWithFallback } from "./_ai.js";
+import { saveTraining } from "./_train.js";
 import { pickShots, shotPrompt, kindFromText, KINDS, menuFor, plannedPrompt } from "./_shots.js";
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
@@ -58,6 +59,7 @@ export default async function handler(req, res) {
     const plan = await planShots(image, mediaType, { kind, menu: menuFor(kind), info, order: ctx.order || "" });
     jobs = plan ? plan.map(x => ({ label: x.label || "새 컷", src, prompt: plannedPrompt(kind, x.prompt_en, custom) }))
       : pickShots(2, kind).map(sh => ({ label: sh.label, src, prompt: shotPrompt(sh, { info, custom }) }));
+    jobs.kind = kind;
   }
 
   // 2장 각각 모델을 바꿔 가며 시도 → 기본 2장
@@ -65,7 +67,10 @@ export default async function handler(req, res) {
   const ok = out.map((x, k) => x.status === "fulfilled" ? { ...x.value, label: jobs[k].label } : null).filter(Boolean);
   if (ok.length) {
     await useQuota(res, quota, 1, mode === "refine" ? "refine" : "regen");
-    return res.status(200).json({ images: ok.map(o => o.src), labels: ok.map(o => o.label), model: ok[0].model });
+    res.status(200).json({ images: ok.map(o => o.src), labels: ok.map(o => o.label), model: ok[0].model });
+    if (quota.user) await saveTraining(quota.user.uid, { kind: mode === "refine" ? (KINDS.includes(ctx.kind) ? ctx.kind : null) : jobs.kind, mode, model: ok[0].model, ctx,
+      items: out.map((x, k) => x.status === "fulfilled" ? { src: x.value.src, label: jobs[k].label, prompt: jobs[k].prompt } : null).filter(Boolean) });
+    return;
   }
   const lastErr = out[0].reason;
   return res.status(500).json({ error: "이미지 재생성 오류: " + (lastErr?.message || "알 수 없음") });
