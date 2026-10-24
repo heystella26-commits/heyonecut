@@ -163,7 +163,7 @@ function renderBlog(p) {
     flush();
     if (x.t === "h") h += `<h2>${esc(x.v)}</h2>`;
     if (x.t === "img") h += `<figure>${x.im.src ? `<img src="${x.im.src}" alt="${esc(x.im.kind)}">` : x.im.loading ? `<div class="miss wait"><span class="spin"></span>사진 ${x.n} · ${esc(x.im.kind)} 만드는 중…</div>` : `<div class="miss">사진 ${x.n} 생성 실패 <button class="copy" onclick="retryBlogImage(${x.n})">다시 시도 (무료)</button></div>`}
-      <figcaption>📷 사진 ${x.n} · ${esc(x.im.kind)}${x.im.src ? ` <a href="${x.im.src}" download="blog-${x.n}.jpg">저장</a>` : ""}</figcaption></figure>`;
+      <figcaption>📷 사진 ${x.n} · ${esc(x.im.kind)}${x.im.src ? ` <a href="${x.im.src}" download="blog-${x.n}.jpg">저장</a> <button class="bref-t" onclick="toggleBlogRefine(${x.n})">✨ 다듬기</button>` : ""}</figcaption>${blogRefineUI(x.im, x.n)}</figure>`;
   });
   flush();
   h += `<div class="tags">${(p.tags || []).map(t => "#" + esc(String(t).replace(/^#/, ""))).join(" ")}</div>`;
@@ -184,6 +184,41 @@ function renderBlog(p) {
     ${(p.sources || []).length ? `<h3 style="margin-top:16px"><span>참고한 자료</span></h3><ol class="plan-list">${p.sources.slice(0, 6).map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//, "").slice(0, 40))}</a></li>`).join("")}</ol>` : ""}
     <p class="note" style="margin-top:12px">네이버 에디터에 본문을 붙여넣고, [사진 N] 자리에 저장한 사진을 순서대로 넣으면 돼요.</p>
   </div>`;
+}
+
+// ---------- 블로그 사진별 다듬기 (1회 차감, 2가지 버전) ----------
+const blogImg = n => (state.blog?.images || []).find(i => +i.slot === +n);
+function blogRefineUI(im, n) {
+  if (!im.src) return "";
+  let h = "";
+  if (im.alts && im.alts.length > 1) h += `<div class="bref-alts"><span>버전 고르기</span>${im.alts.map((a, k) => `<button class="${a.src === im.src ? "on" : ""}" onclick="pickBlogAlt(${n},${k})"><img src="${a.src}" alt=""><small>${esc(a.l)}</small></button>`).join("")}</div>`;
+  if (im.refining) return h + `<div class="bref-box"><span class="spin"></span> 사진 ${n} 다듬는 중… 2가지 버전을 만들고 있어요 (10~20초)</div>`;
+  if (!im.open) return h + (im.rmsg ? `<p class="bref-msg">${im.rmsg}</p>` : "");
+  return h + `<div class="bref-box" id="bref-${n}"><b>사진 ${n} 다듬기</b> <span class="note">원하는 요청을 고르거나 적으면 2가지 버전이 나와요 · 1회 차감</span>
+    <div class="chips">${CHIPS.map(c => `<button type="button" data-v="${esc(c[1])}" onclick="this.classList.toggle('on')">${esc(c[0])}</button>`).join("")}</div>
+    <input type="text" placeholder="직접 적기 (예: 접시를 흰색으로, 더 가까이서)" maxlength="200">
+    <button class="b pri" onclick="doBlogRefine(${n})">✨ 사진 ${n} 다듬기 <span class="cost">1회 차감</span></button></div>`;
+}
+function toggleBlogRefine(n) { const im = blogImg(n); if (!im) return; im.open = !im.open; im.rmsg = ""; renderBlog(state.blog); }
+function pickBlogAlt(n, k) { const im = blogImg(n); if (!im?.alts?.[k]) return; im.src = im.alts[k].src; renderBlog(state.blog); }
+async function doBlogRefine(n) {
+  const im = blogImg(n), box = document.getElementById("bref-" + n); if (!im || !box) return;
+  const parts = [...box.querySelectorAll(".chips button.on")].map(b => b.dataset.v);
+  const t = box.querySelector("input").value.trim(); if (t) parts.push(t);
+  if (!parts.length) { box.querySelector(".note").textContent = "요청을 하나 이상 고르거나 적어 주세요."; return; }
+  const name = (t || box.querySelector(".chips button.on")?.textContent.replace(/^\S+\s/, "") || "다듬음").slice(0, 10);
+  const p = state.blog;
+  im.refining = true; im.open = false; renderBlog(p);
+  try {
+    const j = await callImage({ mode: "refine", source: im.src, instruction: parts.join(", ") });
+    if (!im.alts) im.alts = [{ src: im.src, l: "원래 사진" }];
+    (j.images || []).forEach((s, k) => im.alts.push({ src: s, l: name + " " + (k + 1) }));
+    im.alts = im.alts.slice(-7);
+    im.src = j.images[0];
+    im.rmsg = `✅ 다듬은 사진 ${j.images.length}장이 나왔어요 (1회 차감). 아래에서 마음에 드는 버전을 고르세요.`;
+  } catch (e) { im.rmsg = "⚠️ " + esc(e.message); }
+  im.refining = false;
+  if (state.blog === p) renderBlog(p);
 }
 
 // ---------- 운영자: 블로그 결과를 첫 화면 사례로 등록 ----------
