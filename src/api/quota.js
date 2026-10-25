@@ -10,7 +10,10 @@ export default async function handler(req, res) {
   if (!v) { v = crypto.randomBytes(16).toString("hex"); addCookie(res, `sp_v=${v}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000`); }
   const uid = sessionUid(req);
   // 운영자가 한 번이라도 로그인한 브라우저는 로그아웃해도 기록에서 제외
-  const adminBrowser = isAdmin(uid) || /(?:^|; )sp_adm=1/.test(ck);
+  // 제외: 운영자 기기, 테스트 요청(x-sp-test), 자동화·봇 브라우저(Claude 테스트용 헤드리스 브라우저 포함)
+  const ua = req.headers["user-agent"] || "";
+  const bot = /HeadlessChrome|Playwright|puppeteer|bot|crawl|spider|curl|wget|python|node-fetch|undici|axios|Claude/i.test(ua) || !!req.headers["x-sp-test"];
+  const adminBrowser = isAdmin(uid) || /(?:^|; )sp_adm=1/.test(ck) || bot;
   if (isAdmin(uid) && !/(?:^|; )sp_adm=1/.test(ck)) {
     addCookie(res, "sp_adm=1; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000");
     // 이 브라우저의 예전 방문 기록도 통계에서 빼기 위해 해시를 기억

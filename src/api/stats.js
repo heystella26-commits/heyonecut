@@ -1,6 +1,6 @@
 // 운영자 전용 퍼널 통계 (ADMIN_UIDS에 등록된 계정으로 로그인해야 열림)
 import { env } from "cloudflare:workers";
-import { sessionUid, FREE_LIMIT } from "./_quota.js";
+import { sessionUid, FREE_LIMIT, addCookie } from "./_quota.js";
 import { hashId } from "./_track.js";
 import { getJSON } from "./_store.js";
 const kst = d => new Date(d.getTime() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -9,6 +9,8 @@ export default async function handler(req, res) {
   const uid = sessionUid(req);
   const admins = String(process.env.ADMIN_UIDS || "").split(",").map(s => s.trim()).filter(Boolean);
   if (!uid || !admins.includes(uid)) return res.status(403).json({ error: "운영자 계정으로 로그인해야 볼 수 있어요." });
+  // /admin을 연 기기는 앞으로 방문 통계에서 제외
+  if (!/(?:^|; )sp_adm=1/.test(req.headers.cookie || "")) addCookie(res, "sp_adm=1; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000");
   const to = /^\d{4}-\d{2}-\d{2}$/.test(req.query.to || "") ? req.query.to : kst(new Date());
   const from = /^\d{4}-\d{2}-\d{2}$/.test(req.query.from || "") ? req.query.from : kst(new Date(Date.now() - 29 * 864e5));
   // 운영자 계정·운영자 브라우저 기록 제외
