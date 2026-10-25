@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { track } from "../_track.js";
 import { addCookie, setSession, clearSession, loadUser, mergeIntoUser } from "../_quota.js";
 import { makeConsent } from "../account.js";
+import { srcCookie } from "../_track.js";
 
 const E = process.env;
 const P = {
@@ -50,7 +51,7 @@ export default async function handler(req, res) {
     const uid = `${name}_${me.id}`;
     const existing = await loadUser(uid);
     const u = existing || { uid, provider: name, credits: 0, used: 0, claimed: [], created: Date.now() };
-    await track(existing ? "login" : "signup", { id: uid, member: true, kind: name });
+    await track(existing ? "login" : "signup", { id: uid, member: true, kind: name, src: srcCookie(req) });
     const restored = !!u.deleteAt; delete u.deleteAt;
     // 로그인 창에서 고른 동의(필수 3 + 선택: 학습 활용): 쿠키 sp_cs = "1.<0|1>"
     const cs = /(?:^|;\s*)sp_cs=1\.([01])/.exec(req.headers.cookie || "");

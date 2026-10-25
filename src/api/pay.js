@@ -1,7 +1,7 @@
 // POST: 결제 요청 생성(페이앱) / GET ?oid=: 결제 확인 후 이용권 적립
 import crypto from "node:crypto";
 import { PLANS } from "./_plans.js";
-import { track } from "./_track.js";
+import { track, srcCookie } from "./_track.js";
 import { offerFor } from "./_coupon.js";
 import { saveOrder, loadOrder } from "./_orders.js";
 import { readQuota, writeQuota, cookieWalletId } from "./_quota.js";
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const goodname = disc ? `${p.name} (첫 구매 ${disc.rate}% 할인)` : p.name;
     const oid = Date.now().toString(36) + crypto.randomBytes(6).toString("hex");
     const base = `https://${req.headers.host}`;
-    await saveOrder({ oid, uid: q.id, plan, price, list: p.price, coupon: disc ? disc.rate : 0, credits: p.credits, status: "pending", created: Date.now() });
+    await saveOrder({ oid, uid: q.id, plan, price, list: p.price, coupon: disc ? disc.rate : 0, credits: p.credits, status: "pending", created: Date.now(), src: srcCookie(req) });
     const form = new URLSearchParams({
       cmd: "payrequest", userid: process.env.PAYAPP_USERID, goodname, price: String(price),
       recvphone: tel, smsuse: "n", var1: oid, feedbackurl: `${base}/api/payapp-feedback`,
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     const out = new URLSearchParams(await r.text());
     if (out.get("state") !== "1") return res.status(502).json({ error: "결제창 생성 실패: " + (out.get("errorMessage") || r.status) });
     if (!q.user) await writeQuota(res, q);
-    await track("pay_open", { id: q.id, member: !!q.user, kind: disc ? plan + "_c" + disc.rate : plan, amount: price });
+    await track("pay_open", { id: q.id, member: !!q.user, kind: disc ? plan + "_c" + disc.rate : plan, amount: price, src: srcCookie(req) });
     return res.status(200).json({ oid, payurl: out.get("payurl") });
   }
   // GET ?offer=1: 지금 받을 수 있는 첫 구매 할인

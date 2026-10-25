@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (!o) return res.status(200).send("SUCCESS"); // 모르는 주문은 무시
   if (String(b.pay_state) === "4" && Number(b.price) === o.price && o.status === "pending") {
     o.status = "paid"; o.mul_no = b.mul_no; o.paid = Date.now(); await saveOrder(o);
-    await track("paid", { id: o.uid, member: String(o.uid).includes("_"), kind: o.plan, amount: o.price, n: o.credits });
+    await track("paid", { id: o.uid, member: String(o.uid).includes("_"), kind: o.plan, amount: o.price, n: o.credits, src: o.src || null });
   } else if (["9", "64", "70", "71"].includes(String(b.pay_state)) && o.status !== "claimed") {
     o.status = "cancelled"; await saveOrder(o);
   }

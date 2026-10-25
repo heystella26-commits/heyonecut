@@ -84,7 +84,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--coral);outline-offs
 (async () => {
   const { E, chars, gens, bodyHtml, isIg, meta, igHtml, IGCSS } = window.HOC_CASES;
   { const st = document.createElement("style"); st.textContent = IGCSS + ".kicker.ig{color:#d62976}"; document.head.appendChild(st); }
-  const me = await fetch("/api/quota", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
+  const me = await fetch("/api/quota?" + new URLSearchParams({ v: "1", r: document.referrer || "", us: new URLSearchParams(location.search).get("utm_source") || "", um: new URLSearchParams(location.search).get("utm_medium") || "" }), { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
   const admin = !!me.user?.admin;
   document.getElementById("adminbar").hidden = !admin;
   let lastY = 0;
