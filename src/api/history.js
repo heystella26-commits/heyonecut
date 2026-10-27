@@ -25,6 +25,17 @@ async function stash(uid, v) {
   if (v && typeof v === "object") { const o = {}; for (const [k, x] of Object.entries(v)) o[k] = await stash(uid, x); return o; }
   return v;
 }
+// 서버에서 바로 보관 (모바일에서 연결이 끊겨도 보관함에서 다시 볼 수 있게)
+export async function saveItem(uid, { id, mode, title, thumb, data }) {
+  const now = Date.now();
+  let list = ((await getJSON(idx(uid))) || []).filter(x => now - x.created < KEEP);
+  id = /^[a-z0-9]{6,20}$/.test(id || "") ? id : now.toString(36) + crypto.randomBytes(3).toString("hex");
+  await putJSON(`hist/${uid}/item-${id}`, await stash(uid, data));
+  const old = list.find(x => x.id === id);
+  const meta = { id, mode: mode === "blog" ? "blog" : "ig", title: clean(title, 120), thumb: await stash(uid, thumb || null), created: old?.created || now };
+  await putJSON(idx(uid), [meta, ...list.filter(x => x.id !== id)].slice(0, MAX));
+  return id;
+}
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const uid = await liveUid(req);

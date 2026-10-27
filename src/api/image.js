@@ -1,6 +1,7 @@
 import { checkQuota, useQuota } from "./_quota.js";
 import { toEnglish, editImage, classifyPhoto, planShots, editWithFallback } from "./_ai.js";
 import { saveTraining } from "./_train.js";
+import { logError } from "./_errlog.js";
 import { pickShots, shotPrompt, kindFromText, KINDS, menuFor, plannedPrompt } from "./_shots.js";
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
@@ -73,5 +74,6 @@ export default async function handler(req, res) {
     return;
   }
   const lastErr = out[0].reason;
+  await logError(mode === "refine" ? "다듬기" : "다른 앵글", lastErr?.message, { id: quota.id, ua: req.headers["user-agent"] });
   return res.status(500).json({ error: "이미지 재생성 오류: " + (lastErr?.message || "알 수 없음") });
 }

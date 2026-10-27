@@ -3,6 +3,8 @@ import { track } from "./_track.js";
 import { toEnglish, editImage, claudeStream, grab } from "./_ai.js";
 import { signTicket } from "./_quota.js";
 import { saveTraining } from "./_train.js";
+import { saveItem } from "./history.js";
+import { logError } from "./_errlog.js";
 import { pickShots, shotPrompt, kindFromText, menuFor, plannedPrompt } from "./_shots.js";
 import { classifyPhoto, planShots, editWithFallback } from "./_ai.js";
 // SnapPack MVP - 사진 1장 → 콘텐츠 패키지 생성 API
@@ -170,9 +172,14 @@ export default async function handler(req, res) {
     const im = await imagesPromise;
     const imgs = im.images || [];
     trainJob = () => quota.user && imgs.length ? saveTraining(quota.user.uid, { kind: im.kind, mode: "instagram", model: im.model, ctx: { industry, tone }, items: imgs.map((src, k) => ({ src, label: (im.labels || [])[k], prompt: (im.prompts || [])[k] })) }) : null;
-    send({ type: "done", images: imgs, image_labels: im.labels || [], image_model: im.model, image_kind: im.kind, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
+    if (im.error) await logError("인스타 사진", im.error, { id: quota.id, ua: req.headers["user-agent"] });
+    // 연결이 끊겨도 보관함에서 볼 수 있게 서버에서 먼저 보관
+    let histId = null;
+    if (quota.user) try { histId = await saveItem(quota.user.uid, { mode: "ig", title: (pack.instagram?.caption || "").split("\n")[0].slice(0, 80) || "인스타그램 게시물", thumb: imgs[0], data: { bizName: bizName || "", handle: req.body?.handle || "", p: { ...pack, images: imgs, image_labels: im.labels || [] }, gen: imgs, lab: im.labels || [] } }); } catch {}
+    send({ type: "done", hist_id: histId, images: imgs, image_labels: im.labels || [], image_model: im.model, image_kind: im.kind, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
   } catch (e) {
     await track("fail", { id: quota.id, member: !!quota.user, kind: "instagram" });
+    await logError("인스타 글", e.message, { id: quota.id, ua: req.headers["user-agent"] });
     send({ type: "error", error: e.message, refund: quota.test ? null : signTicket({ k: "refund", uid: quota.id, n: 1, nonce: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), exp: Date.now() + 864e5 }) });
   }
   res.end();

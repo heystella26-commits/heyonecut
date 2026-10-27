@@ -1,5 +1,6 @@
 // 블로그: 사진 1장 + 가게 정보 → 본문 전체 작성 → 사진 들어갈 자리·종류 추천 → 그에 맞는 사진 3~5장 생성
 import { checkQuota, useQuota, signTicket } from "./_quota.js";
+import { logError } from "./_errlog.js";
 import { track } from "./_track.js";
 
 const BLOG_COST = 2;
@@ -135,6 +136,7 @@ export default async function handler(req, res) {
     send({ t: "done", model, secs: (Date.now() - t0) / 1000, post: { title: post.title, body: post.body, tags: post.tags || [], sources: post.sources || [], images } });
   } catch (e) {
     await track("fail", { id: quota.id, member: !!quota.user, kind: "blog" });
+    await logError("블로그 글", e.message, { id: quota.id, ua: req.headers["user-agent"] });
     send({ t: "error", v: e.message, refund });
   }
   res.end();

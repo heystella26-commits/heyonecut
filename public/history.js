@@ -73,6 +73,7 @@
       if (r.id) { cur.id = r.id; if (!toldOnce) { toldOnce = true; const t = document.createElement("div"); t.className = "hsaved"; t.textContent = "📁 보관함에 3일 동안 저장했어요"; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); } }
     }, 2500);
   }
+  window.HIST_ADOPT = (obj, id) => { cur = { id, key: null, obj }; };
   setInterval(tick, 3000);
   setInterval(() => btn.classList.toggle("hidden", !window.__user), 1000);
 })();

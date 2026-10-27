@@ -1,3 +1,11 @@
+// 오류 보고(운영자 화면에서 확인) + 모바일 네트워크 끊김 안내
+function reportErr(where, msg, extra) { try { fetch("/api/errlog", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ where, msg: String(msg || ""), extra }), keepalive: true }); } catch {} }
+function netMsg(e) {
+  const m = String(e?.message || e || "");
+  if (/load failed|failed to fetch|network|connection|끊겼/i.test(m))
+    return "인터넷 연결이 끊겼어요. 화면을 끄거나 다른 앱으로 가면 끊길 수 있어요." + (window.__user ? " 만들던 결과는 서버에서 계속 만들어지니 1~2분 뒤 📁 보관함에서 확인해 보세요." : " 다시 시도해 주세요.");
+  return m;
+}
 // 블로그 실시간 작성·사진 순차 채우기·샘플 갤러리 (app.js 다음에 로드되어 기존 함수를 대체)
 $("goBtn").onclick = async () => {
   if (state.mode === "blog") return runBlog();
@@ -34,7 +42,7 @@ async function runIg() {
         stop(); $("msg").textContent = ""; render(pack); go("res"); onRes = true;
         busy(true, "ig-img");
       }
-      if (ev.type === "done") imgs = ev;
+      if (ev.type === "done") { imgs = ev; if (ev.hist_id) window.HIST_ADOPT?.(state.p, ev.hist_id); }
       if (ev.type === "error") { err = ev.error; if (ev.refund) fetch("/api/refund", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ refund: ev.refund }) }).then(() => refreshQuota()); }
     });
     if (err) throw new Error(err + " (차감된 횟수는 돌려드렸어요)");
@@ -45,7 +53,9 @@ async function runIg() {
     busy(false, state.gen.length ? "✅ 서로 다른 앵글의 사진 2장이 도착했어요." : "⚠️ " + esc(imgs?.image_error || "이미지를 만들지 못했어요."));
     setSlides(0);
   } catch (e) {
-    stop(); if (onRes) busy(false, "⚠️ " + esc(e.message)); else $("msg").textContent = "오류: " + e.message;
+    const msg = netMsg(e);
+    reportErr("인스타", e.message, onRes ? "글 받은 뒤" : "글 받기 전");
+    stop(); if (onRes) busy(false, "⚠️ " + esc(msg)); else $("msg").textContent = "오류: " + msg;
   }
   btn.disabled = false;
 }
@@ -120,8 +130,9 @@ async function runBlog() {
     renderBlog(state.blog); go("bres");
     fillBlogImages();
   } catch (e) {
-    stop(); if (!shown) $("msg").textContent = "오류: " + e.message;
-    else { go("form"); $("msg").textContent = "오류: " + e.message; }
+    reportErr("블로그", e.message, shown ? "본문 받은 뒤" : "본문 받기 전");
+    stop(); if (!shown) $("msg").textContent = "오류: " + netMsg(e);
+    else { go("form"); $("msg").textContent = "오류: " + netMsg(e); }
   }
   btn.disabled = false;
 }
@@ -171,7 +182,7 @@ function renderBlog(p) {
 
   const ok = (p.images || []).filter(i => i.src).length, total = (p.images || []).length, pend = (p.images || []).filter(i => i.loading).length;
   $("bside").innerHTML = `<div class="card">
-    <h3><span>블로그 패키지</span></h3>
+    <h3><span>블로그 패키지</span>${window.__isIOS ? `<span class="ios-tip">📱 사진을 꾹 눌러 저장</span>` : ""}</h3>
     <p class="note" style="margin:0 0 10px">본문 ${(p.body || "").replace(/\[\[[^\]]+\]\]/g, "").replace(/\s/g, "").length.toLocaleString()}자 · 사진 ${ok}/${total}장${pend ? ` (만드는 중 ${pend}장)` : ""}</p>
     <div class="row">
       <button class="b pri" onclick="copyBlog(this)">📋 본문 복사 (사진 자리 표시 포함)</button>

@@ -100,7 +100,7 @@ $("goBtn").onclick = async () => {
     if (!r.ok) throw new Error(p.error);
     if (blog) { state.blog = p; renderBlog(p); go("bres"); } else { render(p); go("res"); }
     stop(); $("msg").textContent = "";
-  } catch (e) { stop(); $("msg").textContent = "오류: " + e.message; }
+  } catch (e) { stop(); reportErr?.("생성", e.message); $("msg").textContent = "오류: " + (window.netMsg ? netMsg(e) : e.message); }
   btn.disabled = false;
 };
 
@@ -162,7 +162,7 @@ async function regen() {
     state.gen = [...j.images, ...state.gen].slice(0, 12);
     state.lab = [...(j.labels || j.images.map(() => "새 후보")), ...state.lab].slice(0, 12);
     setSlides(0); busy(false, "✅ 다른 앵글의 새 사진 2장이 나왔어요. (1회 차감)");
-  } catch (e) { busy(false, "⚠️ " + esc(e.message)); }
+  } catch (e) { window.reportErr?.("이미지", e.message); busy(false, "⚠️ " + esc(window.netMsg ? netMsg(e) : e.message)); }
   updateGo();
 }
 const CHIPS = [["☀️ 더 밝게", "더 밝고 화사하게, 노출과 채도를 올려서"], ["⬜ 배경 심플하게", "배경을 깔끔한 밝은 단색으로 바꿔서 심플하게"],
@@ -193,7 +193,7 @@ async function refine() {
     setSlides(Math.min(k, state.gen.length - 1));
     document.querySelectorAll("#chips button.on").forEach(b => b.classList.remove("on")); $("refineTxt").value = "";
     busy(false, `✅ 다듬은 사진 ${imgs.length}장이 나왔어요! (1회 차감) 이전 사진(${esc(baseLab)})은 그 바로 뒤에 있어요.`);
-  } catch (e) { busy(false, "⚠️ " + esc(e.message)); }
+  } catch (e) { window.reportErr?.("이미지", e.message); busy(false, "⚠️ " + esc(window.netMsg ? netMsg(e) : e.message)); }
   updateGo();
 }
 function expand() { $("capRest").classList.remove("hidden"); $("moreBtn").classList.add("hidden"); }
@@ -218,7 +218,7 @@ function render(p) {
   $("firstC").textContent = p.first_comment || "";
   const a = p.analysis || {};
   let h = `<h2>게시물 패키지</h2><p class="note" style="margin:0 0 14px">${esc(a.industry)} · ${esc(a.mood)}</p>`;
-  h += `<div class="card"><h3><span>이미지 <span class="note">· 눌러서 선택</span></span></h3><div id="thumbs"></div>
+  h += `<div class="card"><h3><span>이미지 <span class="note">· 눌러서 선택 · 한 번 더 누르면 크게 보기</span>${window.__isIOS ? `<span class="ios-tip">📱 아이폰은 사진을 꾹 눌러 저장</span>` : ""}</span></h3><div id="thumbs"></div>
     <div class="edit" id="editBox">
       <h4>✨ 선택한 사진 다듬기</h4>
       <div class="selbox" id="selBox"></div>
@@ -293,6 +293,7 @@ function copyBlog(btn) {
   copyText(p.title + "\n\n" + text, btn);
 }
 function saveAll() {
+  if (window.saveImages) return saveImages((state.blog?.images || []).filter(i => i.src).map(i => i.src));
   (state.blog?.images || []).filter(i => i.src).forEach((im, k) => setTimeout(() => {
     const a = document.createElement("a"); a.href = im.src; a.download = `blog-${im.slot || k + 1}.jpg`; document.body.appendChild(a); a.click(); a.remove();
   }, k * 400));
