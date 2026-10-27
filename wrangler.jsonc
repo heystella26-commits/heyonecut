@@ -9,6 +9,8 @@
   "d1_databases": [{ "binding": "DB", "database_name": "heyonecut-db", "database_id": "c0bebdbb-0d39-417c-898a-2037fe575a15" }],
   "vars": { "FREE_LIMIT": "3", "COUPON_RATE": "30", "COUPON_LAUNCH_RATE": "50", "COUPON_LAUNCH_UNTIL": "", "ADMIN_UIDS": "kakao_5140693256,naver_B7XBrhgtKsKOGFqA8w1g8v_qNzbDdFWYDz3ND615LYw,google_100677317366998248561" },
   "keep_vars": true,
+  // 사용자가 어느 나라 데이터센터로 접속해도 AI 요청은 도쿄 근처에서 나가게 고정 (홍콩 등 지원 안 되는 지역 차단 방지)
+  "placement": { "region": "aws:ap-northeast-1" },
   "triggers": { "crons": ["17 18 * * *"] },
   "observability": { "enabled": true }
 }
