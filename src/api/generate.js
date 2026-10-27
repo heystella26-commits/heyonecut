@@ -5,8 +5,8 @@ import { signTicket } from "./_quota.js";
 import { saveTraining } from "./_train.js";
 import { saveItem } from "./history.js";
 import { logError } from "./_errlog.js";
-import { pickShots, shotPrompt, kindFromText, menuFor, plannedPrompt } from "./_shots.js";
-import { classifyPhoto, planShots, editWithFallback } from "./_ai.js";
+import { pickShots, shotPrompt, kindFromText, menuFor, plannedPrompt, isPersonKind, PERSON_GUARD } from "./_shots.js";
+import { classifyPhoto, planShots, editWithFallback, PERSON_MODELS } from "./_ai.js";
 // SnapPack MVP - 사진 1장 → 콘텐츠 패키지 생성 API
 // 환경변수: ANTHROPIC_API_KEY (필수), AI_GATEWAY_API_KEY (이미지), FAL_KEY (선택)
 
@@ -110,7 +110,7 @@ export default async function handler(req, res) {
     const jobs = plan ? plan.map(x => ({ label: x.label || "새 컷", prompt: plannedPrompt(kind, x.prompt_en, custom) }))
       : pickShots(2, kind).map(sh => ({ label: sh.label, prompt: shotPrompt(sh, { info, custom }) }));
     const src = `data:${mediaType};base64,${image}`;
-    const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, src)));
+    const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, src, isPersonKind(kind) ? PERSON_MODELS : undefined)));
     const ok = out.map((x, k) => x.status === "fulfilled" ? { ...x.value, label: jobs[k].label } : null).filter(Boolean);
     if (ok.length) return { images: ok.map(o => o.src), labels: ok.map(o => o.label), prompts: out.map((x, k) => x.status === "fulfilled" ? jobs[k].prompt : null).filter(Boolean), model: ok[0].model, kind };
     const lastErr = out[0].reason;

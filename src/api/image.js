@@ -1,8 +1,8 @@
 import { checkQuota, useQuota } from "./_quota.js";
-import { toEnglish, editImage, classifyPhoto, planShots, editWithFallback } from "./_ai.js";
+import { toEnglish, editImage, classifyPhoto, planShots, editWithFallback, PERSON_MODELS } from "./_ai.js";
 import { saveTraining } from "./_train.js";
 import { logError } from "./_errlog.js";
-import { pickShots, shotPrompt, kindFromText, KINDS, menuFor, plannedPrompt } from "./_shots.js";
+import { pickShots, shotPrompt, kindFromText, KINDS, menuFor, plannedPrompt, isPersonKind, PERSON_GUARD } from "./_shots.js";
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
 
@@ -64,7 +64,9 @@ export default async function handler(req, res) {
   }
 
   // 2장 각각 모델을 바꿔 가며 시도 → 기본 2장
-  const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, j.src)));
+  const personK = isPersonKind(jobs.kind || ctx.kind);
+  if (personK && mode === "refine") jobs.forEach(j => j.prompt += PERSON_GUARD);
+  const out = await Promise.allSettled(jobs.map(j => editWithFallback(token, j.prompt, j.src, personK ? PERSON_MODELS : undefined)));
   const ok = out.map((x, k) => x.status === "fulfilled" ? { ...x.value, label: jobs[k].label } : null).filter(Boolean);
   if (ok.length) {
     await useQuota(res, quota, 1, mode === "refine" ? "refine" : "regen");

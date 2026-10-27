@@ -114,9 +114,11 @@ space (shop interior or exterior is the subject)` }] }] }),
 
 const IMG_MODELS = ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"];
 // 한 장씩 모델을 바꿔 가며 시도 (한 장이 실패해도 다른 장은 그대로)
-export async function editWithFallback(token, prompt, src) {
+// 사람(얼굴)이 나오는 사진은 얼굴 유지가 더 좋은 모델을 먼저
+export const PERSON_MODELS = ["bytedance/seedream-4.0", "openai/gpt-image-1-mini", "bfl/flux-kontext-pro"];
+export async function editWithFallback(token, prompt, src, models = IMG_MODELS) {
   let last;
-  for (const m of IMG_MODELS) { try { return { src: await editImage(token, m, prompt, src), model: m }; } catch (e) { last = e; } }
+  for (const m of models) { try { return { src: await editImage(token, m, prompt, src), model: m }; } catch (e) { last = e; } }
   throw last || new Error("이미지 생성 실패");
 }
 
@@ -133,6 +135,7 @@ export async function planShots(image, mediaType, { kind, menu, info = "", order
 Look at this photo and plan 2 NEW Instagram photos of the same subject that look like a real pro shoot. Pick the 2 shots from this menu that suit THIS photo best, and make them clearly different from each other AND from the original (different camera angle, distance, composition, lighting, background and props):
 ${menu.map(([l, p]) => `- ${l}: ${p}`).join("\n")}
 For each, write prompt_en: one detailed English instruction for an image-editing model (camera angle and distance, framing, lens feel, lighting direction and time of day, background/setting, 2-3 props that fit this business, color mood). Describe the subject's look specifically so it stays identical. Never ask to change the subject itself. No text or logos.
+If a person is in the photo: keep their exact face, hairstyle, body shape and outfit; change only camera angle, framing, background and a natural, calm pose. Never describe motion blur, movement trails, spinning, jumping or anything that could create duplicate or see-through figures. Exactly one person.
 Answer ONLY with JSON: [{"label":"<menu label in Korean>","prompt_en":"..."},{"label":"...","prompt_en":"..."}]` }] }] }),
       signal: AbortSignal.timeout(20000),
     });

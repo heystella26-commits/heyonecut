@@ -1,4 +1,7 @@
 // 인스타 이미지 컷 규칙: 사진 종류(업종)별로 어울리는 앵글·구도·포즈를 따로 정해 두고 서로 다른 2컷을 고름
+// 사람 사진 공통: 얼굴 일관성 + 잔상(유령처럼 겹친 몸) 방지
+export const PERSON_GUARD = " Identity is the top priority: the same face (same eyes, nose, lips, face shape, skin tone, makeup), same hairstyle and same body as the reference, as if photographed in the same photo shoot. Exactly ONE person, fully solid and opaque. No duplicate bodies, no ghost or see-through figures, no double exposure, no motion blur or trails, no extra limbs. Natural, still pose.";
+export const isPersonKind = k => !!(C[k] && C[k].person);
 const C = {
   food: { name: "음식", keep: "Keep exactly the same dish (same food, ingredients, portion, colors and cooking state).", shots: [
     ["45도 메인컷", "a classic 45-degree hero shot of the dish at table height, the dish filling the center, appetizing highlights, side dishes softly blurred around it"],
@@ -15,9 +18,9 @@ const C = {
     ["카페 공간 와이드", "a wider shot showing the table in a cozy cafe interior, the menu smaller in frame so the atmosphere is visible"],
     ["무드 사이드라이트", "a moody shot with strong side light from a window, deep shadows and a dark background, cinematic"]] },
   fashion_person: { name: "패션(착용)", person: true, keep: "Keep the same person (same face, hair and body) wearing exactly the same outfit and items with the same colors.", shots: [
-    ["다른 포즈 전신컷", "a full-body shot of the same person in a new natural pose (walking or mid-step), from a slightly different angle"],
+    ["다른 앵글 전신컷", "a full-body shot of the same person standing naturally with a relaxed pose, from a slightly different camera angle and distance"],
     ["상반신 클로즈업", "a waist-up shot of the same person in a different pose, focusing on the outfit details, looking away from the camera"],
-    ["뒤돌아보는 컷", "an over-the-shoulder shot of the same person turning back toward the camera, candid street-snap mood"],
+    ["반측면 컷", "a three-quarter angle shot of the same person, body slightly turned, face toward the camera, candid street-snap mood"],
     ["앉은 포즈컷", "the same person sitting casually in a new pose, shot at a low angle, relaxed lifestyle mood"],
     ["소재 디테일컷", "a close-up of the outfit's fabric, buttons and stitching while worn, face cropped out"]] },
   fashion_item: { name: "패션(제품)", keep: "Keep exactly the same clothing items (same design, colors, fabric and details). Do not add a person.", shots: [
@@ -67,7 +70,7 @@ export const menuFor = kind => (C[kind] || C.product).shots;
 export function plannedPrompt(kind, prompt, custom = "") {
   const c = C[kind] || C.product;
   const noPeople = c.person ? "" : " Do not add any people or faces (a hand only if the instruction asks for it).";
-  return `Using this photo as the reference, create a new photo: ${prompt}. ${c.keep}${noPeople} Photorealistic, natural high-end Instagram photo, vertical 4:5, no text, no logos, no watermarks.${custom}`;
+  return `Using this photo as the reference, create a new photo: ${prompt}. ${c.keep}${noPeople}${c.person ? PERSON_GUARD : ""} Photorealistic, natural high-end Instagram photo, vertical 4:5, no text, no logos, no watermarks.${custom}`;
 }
 // 사진 종류가 모를 때 업종 입력으로 추정
 export function kindFromText(...hints) {
@@ -87,5 +90,5 @@ export function pickShots(n, kind) {
 export function shotPrompt(s, { info = "", custom = "" } = {}) {
   const c = C[s.kind] || C.product;
   const noPeople = c.person ? "" : " Do not add any people or faces (a hand only if this shot asks for it).";
-  return `Using this photo as the reference, create a NEW photo with a clearly different camera angle and composition: ${s.p}. Setting: ${s.scene}. ${info ? `Brand context: ${info}. ` : ""}Remove all clutter (cables, receipts, boxes, machines). Photorealistic, high-end Instagram photo, vertical 4:5. ${c.keep}${noPeople} Do not add text or logos.${custom}`;
+  return `Using this photo as the reference, create a NEW photo with a clearly different camera angle and composition: ${s.p}. Setting: ${s.scene}. ${info ? `Brand context: ${info}. ` : ""}Remove all clutter (cables, receipts, boxes, machines). Photorealistic, high-end Instagram photo, vertical 4:5. ${c.keep}${noPeople}${c.person ? PERSON_GUARD : ""} Do not add text or logos.${custom}`;
 }
