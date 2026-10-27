@@ -3,7 +3,7 @@ import { verifyTicket, readQuota } from "./_quota.js";
 import { editImage, classifyPhoto } from "./_ai.js";
 import { saveTraining, wantsTraining } from "./_train.js";
 import { claimOnce, releaseOnce } from "./_store.js";
-const MODELS = ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"];
+const MODELS = ["openai/gpt-image-1", "bytedance/seedream-4.0", "bfl/flux-kontext-pro"];
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
   const { ticket, image, mediaType = "image/jpeg" } = req.body || {};

@@ -23,7 +23,8 @@ export async function editImage(token, model, prompt, dataUrl) {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "content-type": "application/json" },
     body: JSON.stringify({ model, prompt, images: [{ image_url: dataUrl }],
-      providerOptions: { blackForestLabs: { outputFormat: "jpeg" } } }),
+      ...(model.startsWith("openai/") ? { quality: "medium", size: "1024x1536", output_format: "jpeg" } : {}),
+      providerOptions: { blackForestLabs: { outputFormat: "jpeg" }, openai: { quality: "medium", size: "1024x1536", outputFormat: "jpeg" } } }),
   });
   const gd = await g.json().catch(() => ({}));
   if (!g.ok) throw new Error(gd.error?.message || `이미지 생성 실패 (${g.status})`);
@@ -112,13 +113,17 @@ space (shop interior or exterior is the subject)` }] }] }),
   } catch { return null; }
 }
 
-const IMG_MODELS = ["bfl/flux-kontext-pro", "bytedance/seedream-4.0", "openai/gpt-image-1-mini"];
+// 1순위 OpenAI GPT Image 1(중간 화질), 실패하면 Seedream → Flux
+export const IMG_MODELS = ["openai/gpt-image-1", "bytedance/seedream-4.0", "bfl/flux-kontext-pro"];
 // 한 장씩 모델을 바꿔 가며 시도 (한 장이 실패해도 다른 장은 그대로)
 // 사람(얼굴)이 나오는 사진은 얼굴 유지가 더 좋은 모델을 먼저
-export const PERSON_MODELS = ["bytedance/seedream-4.0", "openai/gpt-image-1-mini", "bfl/flux-kontext-pro"];
+export const PERSON_MODELS = IMG_MODELS;
 export async function editWithFallback(token, prompt, src, models = IMG_MODELS) {
   let last;
-  for (const m of models) { try { return { src: await editImage(token, m, prompt, src), model: m }; } catch (e) { last = e; } }
+  for (const m of models) {
+    try { return { src: await editImage(token, m, prompt, src), model: m }; }
+    catch (e) { last = e; if (m === models[0]) import("./_errlog.js").then(x => x.logError("이미지 1순위 실패 → 다음 모델", `${m}: ${e.message}`)).catch(() => {}); }
+  }
   throw last || new Error("이미지 생성 실패");
 }
 
