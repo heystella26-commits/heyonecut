@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin-content
+Disallow: /api/
+Sitemap: https://heyonecut.com/sitemap.xml
