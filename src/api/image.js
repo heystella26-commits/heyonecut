@@ -6,7 +6,7 @@ import { pickShots, shotPrompt, kindFromText, KINDS, menuFor, plannedPrompt, isP
 // 이미지만 다시 만들기
 // mode "regen": 원본 사진으로 새 버전 2장 / mode "refine": 선택한 이미지를 요청대로 다듬어 1장
 
-const MODELS = ["openai/gpt-image-1", "bytedance/seedream-4.0", "bfl/flux-kontext-pro"];
+const MODELS = ["openai/gpt-image-2", "bfl/flux-kontext-pro", "bytedance/seedream-4.0"];
 // 한 번 더 생성할 때마다 다른 결과가 나오도록 고르는 변주 후보
 const MOOD_VARIANTS = [
   "warm evening light with soft shadows", "bright clean morning light", "cozy interior with wooden textures",
