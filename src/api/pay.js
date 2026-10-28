@@ -5,6 +5,7 @@ import { track, srcCookie } from "./_track.js";
 import { offerFor } from "./_coupon.js";
 import { saveOrder, loadOrder } from "./_orders.js";
 import { readQuota, writeQuota, cookieWalletId } from "./_quota.js";
+import { logError } from "./_errlog.js";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -31,6 +32,7 @@ export default async function handler(req, res) {
     const r = await fetch("https://api.payapp.kr/oapi/apiLoad.html", { method: "POST", body: form,
       headers: { "content-type": "application/x-www-form-urlencoded" } });
     const out = new URLSearchParams(await r.text());
+    if (out.get("state") !== "1") await logError("결제창 생성", out.get("errorMessage") || String(r.status), { id: q.id, ua: req.headers["user-agent"], extra: plan });
     if (out.get("state") !== "1") return res.status(502).json({ error: "결제창 생성 실패: " + (out.get("errorMessage") || r.status) });
     if (!q.user) await writeQuota(res, q);
     await track("pay_open", { id: q.id, member: !!q.user, kind: disc ? plan + "_c" + disc.rate : plan, amount: price, src: srcCookie(req) });

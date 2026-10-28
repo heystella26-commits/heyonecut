@@ -323,6 +323,7 @@ async function subscribe(plan) {
     if (!r.ok || !d.payurl) throw new Error(d.error || "결제창을 만들지 못했어요.");
     location.href = d.payurl;
   } catch (e) {
+    window.reportErr?.("결제", e.message, plan);
     payMsg("오류: " + esc(e.message));
     document.querySelectorAll(".plan button").forEach(b => b.disabled = false);
   }
