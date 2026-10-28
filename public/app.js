@@ -320,6 +320,7 @@ async function subscribe(plan) {
   try {
     const r = await fetch("/api/pay", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan, phone: tel }) });
     const d = await r.json();
+    if (r.status === 503 && d.error) { payMsg(esc(d.error)); document.querySelectorAll(".plan button").forEach(b => b.disabled = false); return; }
     if (!r.ok || !d.payurl) throw new Error(d.error || "결제창을 만들지 못했어요.");
     location.href = d.payurl;
   } catch (e) {

@@ -6,6 +6,7 @@ import { offerFor } from "./_coupon.js";
 import { saveOrder, loadOrder } from "./_orders.js";
 import { readQuota, writeQuota, cookieWalletId } from "./_quota.js";
 import { logError } from "./_errlog.js";
+import { getJSON } from "./_store.js";
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -16,6 +17,7 @@ export default async function handler(req, res) {
     const tel = String(phone || "").replace(/\D/g, "");
     if (!p) return res.status(400).json({ error: "플랜을 선택해 주세요." });
     if (!/^01\d{8,9}$/.test(tel)) return res.status(400).json({ error: "휴대폰 번호를 정확히 입력해 주세요." });
+    if ((await getJSON("sys/pay-paused"))?.on) return res.status(503).json({ error: "지금은 결제를 잠시 쉬고 있어요. 무료 체험은 그대로 이용할 수 있어요 🙏" });
     if (!process.env.PAYAPP_USERID) return res.status(503).json({ error: "결제 준비 중이에요. (판매자 설정 전)" });
     const offer = await offerFor(q, PLANS);
     const disc = offer && offer.plan === plan ? offer : null;

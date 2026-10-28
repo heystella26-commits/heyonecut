@@ -31,8 +31,9 @@ export async function cleanup() {
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   if (!isAdmin(sessionUid(req))) return res.status(403).json({ error: "운영자만 쓸 수 있어요." });
-  if (req.method === "GET") return res.status(200).json({ last: await getJSON("sys/cleanup-last") });
+  if (req.method === "GET") return res.status(200).json({ last: await getJSON("sys/cleanup-last"), payPaused: !!(await getJSON("sys/pay-paused"))?.on });
   const b = req.body || {};
+  if (b.action === "pause") { await putJSON("sys/pay-paused", { on: !!b.on, at: Date.now() }); return res.status(200).json({ ok: true, payPaused: !!b.on }); }
   if (b.action === "run") return res.status(200).json(await cleanup());
   if (b.action === "purge" && /^[a-z]+_[\w-]+$/.test(b.uid || "")) return res.status(200).json({ ok: true, ...(await purgeUser(b.uid)) });
   res.status(400).json({ error: "알 수 없는 요청이에요." });

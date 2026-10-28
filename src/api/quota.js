@@ -29,5 +29,5 @@ export default async function handler(req, res) {
     else if (!srcCookie(req) || src !== "direct") addCookie(res, `sp_src=${encodeURIComponent(src)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
     await track("visit", { id: "v." + v, member: !!uid, src });
   }
-  res.status(200).json(await status(req));
+  res.status(200).json({ ...(await status(req)), payPaused: !!(await getJSON("sys/pay-paused"))?.on });
 }
