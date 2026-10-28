@@ -16,10 +16,11 @@ import stats from "./api/stats.js";
 import cases from "./api/cases.js";
 import history from "./api/history.js";
 import errlog from "./api/errlog.js";
+import dl from "./api/dl.js";
 import links, { handleShort } from "./api/links.js";
 import cleanupApi, { cleanup } from "./api/cleanup.js";
 
-const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account, stats, cases, history, errlog, links, cleanup: cleanupApi };
+const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account, stats, cases, history, errlog, dl, links, cleanup: cleanupApi };
 
 // Vercel식 (req, res) 핸들러를 Worker Request/Response로 연결
 function makeRes(resolve) {

@@ -175,7 +175,8 @@ export default async function handler(req, res) {
     if (im.error) await logError("인스타 사진", im.error, { id: quota.id, ua: req.headers["user-agent"] });
     // 연결이 끊겨도 보관함에서 볼 수 있게 서버에서 먼저 보관
     let histId = null;
-    if (quota.user) try { histId = await saveItem(quota.user.uid, { mode: "ig", title: (pack.instagram?.caption || "").split("\n")[0].slice(0, 80) || "인스타그램 게시물", thumb: imgs[0], data: { bizName: bizName || "", handle: req.body?.handle || "", p: { ...pack, images: imgs, image_labels: im.labels || [] }, gen: imgs, lab: im.labels || [] } }); } catch {}
+    const histOwner = quota.user ? quota.user.uid : (quota.credits > 0 || quota.claimed?.length ? "anon_" + String(quota.id).replace(/[^a-zA-Z0-9-]/g, "") : null);
+    if (histOwner) try { histId = await saveItem(histOwner, { mode: "ig", title: (pack.instagram?.caption || "").split("\n")[0].slice(0, 80) || "인스타그램 게시물", thumb: imgs[0], data: { bizName: bizName || "", handle: req.body?.handle || "", p: { ...pack, images: imgs, image_labels: im.labels || [] }, gen: imgs, lab: im.labels || [] } }); } catch {}
     send({ type: "done", hist_id: histId, images: imgs, image_labels: im.labels || [], image_model: im.model, image_kind: im.kind, image_error: im.error, secs: Math.round((Date.now() - t0) / 100) / 10 });
   } catch (e) {
     await track("fail", { id: quota.id, member: !!quota.user, kind: "instagram" });

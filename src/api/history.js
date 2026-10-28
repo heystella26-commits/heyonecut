@@ -1,15 +1,17 @@
 // 내 결과물 보관함: 로그인한 사용자의 생성 결과(글+사진)를 3일 동안 저장. 3일이 지나면 자동 삭제(cleanup.js)
 import crypto from "node:crypto";
 import { env } from "cloudflare:workers";
-import { sessionUid, loadUser } from "./_quota.js";
+import { sessionUid, loadUser, walletIdIfAny } from "./_quota.js";
 import { getJSON, putJSON, putBin, getBin, getRaw, deleteKey } from "./_store.js";
 export const KEEP_DAYS = 3;
 const KEEP = KEEP_DAYS * 864e5, MAX = 30;
 const idx = uid => `hist/${uid}/index`;
 const clean = (s, n) => String(s || "").slice(0, n);
+// 회원은 계정 기준, 로그인 없이 이용권을 산 사람은 이 브라우저의 이용권 지갑 기준(anon_…)
 async function liveUid(req) {
-  const uid = sessionUid(req); if (!uid) return null;
-  const u = await loadUser(uid); return u && !u.deleteAt ? uid : null;
+  const uid = sessionUid(req);
+  if (uid) { const u = await loadUser(uid); return u && !u.deleteAt ? uid : null; }
+  const w = walletIdIfAny(req); return w ? "anon_" + w.replace(/[^a-zA-Z0-9-]/g, "") : null;
 }
 // data: URL 사진은 따로 저장하고 주소로 바꿔서 글 JSON을 작게 유지
 async function stash(uid, v) {
@@ -39,7 +41,7 @@ export async function saveItem(uid, { id, mode, title, thumb, data }) {
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const uid = await liveUid(req);
-  if (!uid) return res.status(401).json({ error: "로그인하면 만든 결과물을 3일 동안 보관해 드려요." });
+  if (!uid) return res.status(401).json({ error: "만든 결과물은 3일 동안 보관돼요. 아직 보관된 결과가 없어요." });
   const now = Date.now();
   if (req.method === "GET") {
     if (req.query.f) {

@@ -13,7 +13,7 @@
   document.head.appendChild(css);
   const m = document.createElement("div"); m.id = "histModal"; m.className = "modal hidden";
   m.onclick = e => { if (e.target === m) m.classList.add("hidden"); };
-  m.innerHTML = `<div class="sheet hsheet"><button class="x" onclick="document.getElementById('histModal').classList.add('hidden')">×</button><h2>📁 내 보관함</h2><p class="note">만든 결과물은 <b>3일 동안</b> 여기에 보관돼요. 3일이 지나면 자동으로 삭제되니 필요한 사진·글은 미리 저장해 두세요.</p><p class="note" id="hTrain"></p><div class="hlist" id="hList"></div></div>`;
+  m.innerHTML = `<div class="sheet hsheet"><button class="x" onclick="document.getElementById('histModal').classList.add('hidden')">×</button><h2>📁 내 보관함</h2><p class="note">만든 결과물은 <b>3일 동안</b> 여기에 보관돼요. 로그인하지 않았다면 이 브라우저에서만 보여요. 3일이 지나면 자동으로 삭제되니 필요한 사진·글은 미리 저장해 두세요.</p><p class="note" id="hTrain"></p><div class="hlist" id="hList"></div></div>`;
   document.body.appendChild(m);
   const btn = document.createElement("button"); btn.className = "hbtn hidden"; btn.id = "histBtn"; btn.innerHTML = "📁<span class=\"hb-t\"> 보관함</span>"; btn.onclick = openHist;
   const topr = document.querySelector(".topr"); topr?.insertBefore(btn, document.getElementById("lgSlot") || null);
@@ -21,7 +21,7 @@
   async function openHist() {
     m.classList.remove("hidden"); const L = $("hList");
     const tr = !!window.__user?.consent?.train;
-    $("hTrain").innerHTML = `생성 이미지 학습 활용: <b>${tr ? "동의함" : "동의 안 함"}</b> · <a href="javascript:openConsent('동의 내용을 바꿀 수 있어요. 학습 활용을 끄면 저장된 학습 데이터가 바로 삭제돼요.')">바꾸기</a>`; L.innerHTML = '<p class="note">불러오는 중…</p>';
+    if (!window.__user) $("hTrain").innerHTML = `로그인하면 휴대폰·PC 어디서든 보관함을 볼 수 있어요. <a href="javascript:openLogin()">로그인</a>`; else $("hTrain").innerHTML = `생성 이미지 학습 활용: <b>${tr ? "동의함" : "동의 안 함"}</b> · <a href="javascript:openConsent('동의 내용을 바꿀 수 있어요. 학습 활용을 끄면 저장된 학습 데이터가 바로 삭제돼요.')">바꾸기</a>`; L.innerHTML = '<p class="note">불러오는 중…</p>';
     const j = await fetch("/api/history", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
     const items = j.items || [];
     L.innerHTML = items.length ? items.map(x => `<div class="hit" data-id="${E(x.id)}">${x.thumb ? `<img src="${E(x.thumb)}" alt="">` : '<span class="ni"></span>'}<span><b>${x.mode === "blog" ? "📝" : "📸"} ${E(x.title || "제목 없음")}</b><small>${new Date(x.created).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} · ${left(x.expires)}</small></span><button class="del" data-del="${E(x.id)}">삭제</button></div>`).join("")
@@ -61,7 +61,6 @@
   }
   const sig = () => { const mode = onRes(); const s = mode && snapshot(mode); return s ? mode + ":" + JSON.stringify(s.data).length + ":" + (s.data.gen || []).length : null; };
   async function tick() {
-    if (!window.__user) return;
     const mode = onRes(); if (!mode) return;
     const s = snapshot(mode); if (!s) return;
     if (cur.obj !== s.obj) cur = { id: null, key: null, obj: s.obj };
@@ -75,5 +74,6 @@
   }
   window.HIST_ADOPT = (obj, id) => { cur = { id, key: null, obj }; };
   setInterval(tick, 3000);
-  setInterval(() => btn.classList.toggle("hidden", !window.__user), 1000);
+  setInterval(() => btn.classList.toggle("hidden", !(window.__user || window.__hasWallet || cur.id)), 1000);
+  fetch("/api/history", { cache: "no-store" }).then(r => { if (r.ok) window.__hasWallet = true; }).catch(() => {});
 })();

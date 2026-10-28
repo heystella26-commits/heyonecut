@@ -87,3 +87,5 @@ export function verifyTicket(t) {
 export const isAdmin = uid => !!uid && String(process.env.ADMIN_UIDS || "").split(",").map(s => s.trim()).includes(uid);
 export const isTest = (req, q) => !!q.test;
 export const cookieWalletId = req => readCookieQ(req).id;
+// 로그인 없이 산 이용권 지갑(서명된 쿠키)이 있을 때만 그 id, 없으면 null
+export const walletIdIfAny = req => { const v = cookie(req, NAME); if (!v) return null; const q = readCookieQ(req); return q.used === 999 ? null : q.id; };

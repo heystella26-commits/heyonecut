@@ -27,7 +27,11 @@
   let sx = null; img.addEventListener("touchstart", e => sx = e.touches[0].clientX, { passive: true });
   img.addEventListener("touchend", e => { if (sx === null || list.length < 2) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) { at = (at + (dx < 0 ? 1 : -1) + list.length) % list.length; show(); } sx = null; });
   addEventListener("keydown", e => { if (box.hidden) return; if (e.key === "Escape") close(); if (e.key === "ArrowRight") { at = (at + 1) % list.length; show(); } if (e.key === "ArrowLeft") { at = (at - 1 + list.length) % list.length; show(); } });
-  async function toFile(src, name) { const b = await (await fetch(src)).blob(); return new File([b], name, { type: b.type || "image/jpeg" }); }
+  async function toFile(src, name) {
+    let r; try { r = await fetch(src); } catch { r = null; }
+    if (!r || !r.ok) r = await fetch("/api/dl?u=" + encodeURIComponent(src)); // 다른 사이트 이미지는 서버를 거쳐 받기
+    const b = await r.blob(); return new File([b], name, { type: b.type || "image/jpeg" });
+  }
   // 저장: 아이폰은 공유 시트(→ 이미지 저장), 그 밖은 바로 다운로드
   window.saveImage = async (src, name = "heyonecut.jpg", silentFallback) => {
     try {

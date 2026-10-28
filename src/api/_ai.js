@@ -31,7 +31,11 @@ export async function editImage(token, model, prompt, dataUrl) {
   if (!g.ok) throw new Error(gd.error?.message || `이미지 생성 실패 (${g.status})`);
   const d = gd.data?.[0];
   if (!d) throw new Error("모델이 이미지를 반환하지 않았습니다");
-  if (d.url) return d.url;
+  // 모델이 주소(URL)로 돌려주면 서버에서 받아 data URL로 바꿈 — 화면에서 저장·보관·다듬기가 막히지 않게(다른 사이트 이미지는 브라우저가 저장을 막음)
+  if (d.url) {
+    try { const r = await fetch(d.url); if (r.ok) { const t = r.headers.get("content-type") || "image/jpeg"; return `data:${t};base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`; } } catch {}
+    return d.url;
+  }
   return `data:${d.b64_json.startsWith("/9j/") ? "image/jpeg" : "image/png"};base64,${d.b64_json}`;
 }
 
