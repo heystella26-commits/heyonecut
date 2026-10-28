@@ -37,7 +37,7 @@
     try {
       const f = await toFile(src, name);
       if (isIOS && navigator.canShare?.({ files: [f] })) { await navigator.share({ files: [f] }); return; }
-      const u = URL.createObjectURL(f), a = document.createElement("a"); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+      const u = URL.createObjectURL(f), a = document.createElement("a"); a.href = u; a.download = name; a.dataset.direct = "1"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
     } catch (e) {
       if (e?.name === "AbortError") return; // 사용자가 공유 시트를 닫음
       if (!silentFallback) openViewer([{ src, label: "꾹 눌러서 저장하세요" }]);
@@ -51,7 +51,7 @@
   };
   // 사진 누르면 크게 보기 / 저장 링크 가로채기
   document.addEventListener("click", e => {
-    const a = e.target.closest("a[download]");
+    const a = e.target.closest("a[download]:not([data-direct])"); // 직접 만든 다운로드 링크는 그대로 통과 (예전엔 여기서 다시 가로채 저장이 멈췄음)
     if (a) { e.preventDefault(); saveImage(a.href, a.getAttribute("download") || "heyonecut.jpg"); return; }
     const t = e.target.closest("#track figure img, .post figure img, .pick.sel img");
     if (!t) return;

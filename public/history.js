@@ -56,14 +56,14 @@
     const base = { bizName: $("bizName")?.value || "", handle: $("handle")?.value || "" };
     if (mode === "blog") { const b = state.blog; if (!b || !b.title) return null; if ((b.images || []).some(i => i.loading)) return null;
       return { obj: b, mode, title: b.title, thumb: (b.images || []).find(i => i.src)?.src, data: { ...base, blog: b } }; }
-    const p = state.p; if (!p) return null;
+    const p = state.p; if (!p || !(state.gen||[]).length) return null;
     return { obj: p, mode, title: (p.instagram?.caption || "").split("\n")[0].slice(0, 80) || "인스타그램 게시물", thumb: state.gen[0], data: { ...base, p, gen: state.gen, lab: state.lab } };
   }
   const sig = () => { const mode = onRes(); const s = mode && snapshot(mode); return s ? mode + ":" + JSON.stringify(s.data).length + ":" + (s.data.gen || []).length : null; };
   async function tick() {
     const mode = onRes(); if (!mode) return;
     const s = snapshot(mode); if (!s) return;
-    if (cur.obj !== s.obj) cur = { id: null, key: null, obj: s.obj };
+    if (cur.obj !== s.obj) { if (s.mode === "ig" && !cur.wait) { cur.wait = Date.now(); return; } if (s.mode === "ig" && Date.now() - cur.wait < 8000) return; cur = { id: null, key: null, obj: s.obj }; }
     const key = sig(); if (key === cur.key) return;
     cur.key = key;
     clearTimeout(timer);
