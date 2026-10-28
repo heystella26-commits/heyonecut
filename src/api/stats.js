@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   const one = async (sql, ...a) => (await q(sql, ...a).first()) || {};
   const all = async (sql, ...a) => (await q(sql, ...a).all()).results || [];
   const R = "day BETWEEN ? AND ?" + NA; // 기간 + 운영자 제외
-  const [vis, sign, login, act, wall, open, paid, rep, use, fail, plans, kinds, sources, daily] = await Promise.all([
+  const [vis, sign, login, act, wall, open, paid, rep, use, fail, plans, kinds, contents, sources, daily] = await Promise.all([
     one(`SELECT COUNT(*) c, COUNT(DISTINCT who) u FROM events WHERE ${R} AND ev='visit'`),
     one(`SELECT COUNT(*) c FROM events WHERE ${R} AND ev='signup'`),
     one(`SELECT COUNT(DISTINCT who) u FROM events WHERE ${R} AND ev='login'`),
@@ -33,9 +33,12 @@ export default async function handler(req, res) {
     one(`SELECT COUNT(*) c FROM events WHERE ${R} AND ev='fail'`),
     all(`SELECT kind, COUNT(*) c, SUM(amount) a FROM events WHERE ${R} AND ev='paid' GROUP BY kind ORDER BY a DESC`),
     all(`SELECT kind, COUNT(*) c, SUM(n) n, SUM(free) f FROM events WHERE ${R} AND ev='use' GROUP BY kind ORDER BY c DESC`),
-    all(`SELECT COALESCE(src,'(기록 전)') src, COUNT(DISTINCT CASE WHEN ev='visit' THEN who END) visitors, SUM(ev='visit') visits, SUM(ev='signup') signups,
+    all(`SELECT src, SUM(ev='click') clicks, COUNT(DISTINCT CASE WHEN ev='visit' THEN who END) visitors, SUM(ev='signup') signups,
       COUNT(DISTINCT CASE WHEN ev='pay_open' THEN who END) payOpen, COUNT(DISTINCT CASE WHEN ev='paid' THEN who END) payers, SUM(CASE WHEN ev='paid' THEN amount ELSE 0 END) revenue
-      FROM events WHERE ${R} AND ev IN ('visit','signup','pay_open','paid') GROUP BY 1 ORDER BY visitors DESC, revenue DESC`),
+      FROM events WHERE ${R} AND src IS NOT NULL AND ev IN ('click','visit','signup','pay_open','paid') GROUP BY src ORDER BY clicks DESC, visitors DESC`),
+    all(`SELECT COALESCE(CASE WHEN instr(src,'/')>0 THEN substr(src,1,instr(src,'/')-1) ELSE src END,'(기록 전)') src, SUM(ev='click') clicks, COUNT(DISTINCT CASE WHEN ev='visit' THEN who END) visitors, SUM(ev='visit') visits, SUM(ev='signup') signups,
+      COUNT(DISTINCT CASE WHEN ev='pay_open' THEN who END) payOpen, COUNT(DISTINCT CASE WHEN ev='paid' THEN who END) payers, SUM(CASE WHEN ev='paid' THEN amount ELSE 0 END) revenue
+      FROM events WHERE ${R} AND ev IN ('click','visit','signup','pay_open','paid') GROUP BY 1 ORDER BY visitors DESC, revenue DESC`),
     all(`SELECT day, COUNT(DISTINCT CASE WHEN ev='visit' THEN who END) users, SUM(ev='signup') signups, COUNT(DISTINCT CASE WHEN ev='paid' THEN who END) payers, SUM(CASE WHEN ev='paid' THEN amount ELSE 0 END) revenue, SUM(CASE WHEN ev='use' THEN n ELSE 0 END) credits FROM events WHERE ${R} GROUP BY day ORDER BY day DESC`),
   ]);
   res.status(200).json({ from, to, freeLimit: FREE_LIMIT,
@@ -43,5 +46,5 @@ export default async function handler(req, res) {
     activated: act.u || 0, paywallUsers: wall.u || 0, payOpenUsers: open.u || 0,
     payers: paid.u || 0, orders: paid.c || 0, revenue: paid.a || 0, repeatPayers: rep.u || 0,
     uses: use.c || 0, creditsUsed: use.n || 0, freeCreditsUsed: use.f || 0, fails: fail.c || 0,
-    plans, kinds, sources, daily, excluded: ex.length });
+    plans, kinds, contents, sources, daily, excluded: ex.length });
 }

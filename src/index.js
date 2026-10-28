@@ -16,9 +16,10 @@ import stats from "./api/stats.js";
 import cases from "./api/cases.js";
 import history from "./api/history.js";
 import errlog from "./api/errlog.js";
+import links, { handleShort } from "./api/links.js";
 import cleanupApi, { cleanup } from "./api/cleanup.js";
 
-const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account, stats, cases, history, errlog, cleanup: cleanupApi };
+const ROUTES = { quota, generate, image, blog, "blog-image": blogImage, pay, "payapp-feedback": payappFeedback, refund, grant, samples, "admin-gen": adminGen, account, stats, cases, history, errlog, links, cleanup: cleanupApi };
 
 // Vercel식 (req, res) 핸들러를 Worker Request/Response로 연결
 function makeRes(resolve) {
@@ -88,7 +89,10 @@ export default {
 
 async function route(request, env, ctx) {
     const url = new URL(request.url);
-    if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(request);
+    if (!url.pathname.startsWith("/api/")) {
+      const short = await handleShort(request, url).catch(() => null); // 짧은 추적 링크 (/ig, /ig/콘텐츠 …)
+      return short || env.ASSETS.fetch(request);
+    }
     const parts = url.pathname.slice(5).replace(/\/+$/, "").split("/");
     const query = Object.fromEntries(url.searchParams);
     let handler = ROUTES[parts[0]];

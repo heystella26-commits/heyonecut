@@ -21,9 +21,12 @@ export default async function handler(req, res) {
     if (!list.includes(h)) await putJSON("sys/admin-visitors", [...list, h].slice(-50));
   }
   if (req.query.v === "1" && !adminBrowser) {
-    const src = sourceOf({ ref: req.query.r, utm: req.query.us, medium: req.query.um, ua: req.headers["user-agent"], host: req.headers.host });
+    // 짧은 링크로 막 들어왔으면(sp_lnk) 그 링크의 경로를 그대로 씀
+    const viaLink = /(?:^|; )sp_lnk=1/.test(ck) && srcCookie(req);
+    const src = viaLink || sourceOf({ ref: req.query.r, utm: req.query.us, medium: req.query.um, ua: req.headers["user-agent"], host: req.headers.host });
     // 첫 유입 경로는 30일 동안 기억해서 가입·결제까지 이어 붙임 (외부에서 새로 들어오면 갱신)
-    if (!srcCookie(req) || src !== "direct") addCookie(res, `sp_src=${encodeURIComponent(src)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
+    if (viaLink) addCookie(res, "sp_lnk=; Path=/; Max-Age=0");
+    else if (!srcCookie(req) || src !== "direct") addCookie(res, `sp_src=${encodeURIComponent(src)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
     await track("visit", { id: "v." + v, member: !!uid, src });
   }
   res.status(200).json(await status(req));

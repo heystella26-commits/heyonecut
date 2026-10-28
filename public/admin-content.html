@@ -1,0 +1,67 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>콘텐츠별 성과 – 헤이원컷</title><link rel="icon" href="/mark.svg?v=4">
+<style>
+:root{--fg:#1a1a1a;--mut:#7a7a7a;--line:#ececec;--bg:#f7f7f5;--card:#fff;--brand:#ff5a36;--g:#16a34a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.w{max-width:1100px;margin:0 auto;padding:20px 16px 60px}a{color:var(--brand)}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}h1{font-size:20px;margin:0}h2{font-size:15px;margin:26px 0 10px}
+.ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.ctl input,.ctl button,.ctl select{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.ctl button{cursor:pointer}.ctl button.on{background:var(--fg);color:#fff;border-color:var(--fg)}.ctl button.pri{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:760px}th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}th{font-size:12px;color:var(--mut);font-weight:600;cursor:pointer}
+td.bar{min-width:120px}.b{display:inline-block;height:10px;background:var(--brand);border-radius:4px;vertical-align:middle;margin-right:6px}
+.note{color:var(--mut);font-size:12px;margin-top:8px}code{background:#f1f1f1;border-radius:6px;padding:2px 6px}
+.copy{border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 8px;font:inherit;font-size:12px;cursor:pointer}.del{color:#c2410c}
+.rules td:first-child{font-weight:700}
+</style></head><body><div class="w">
+<header><h1>콘텐츠별 성과 <small style="font-weight:400;color:var(--mut);font-size:13px" id="range"></small></h1>
+<div class="ctl"><a href="/admin">← 운영 대시보드</a><button data-d="7">7일</button><button data-d="30" class="on">30일</button><button data-d="90">90일</button>
+<select id="chf"><option value="">전체 채널</option></select></div></header>
+
+<h2>짧은 링크 만들기</h2>
+<div class="card"><div class="ctl"><select id="nch"></select><input id="ncontent" placeholder="콘텐츠 이름 (예: cafe-reel1, 비우면 채널 전체)" style="min-width:260px"><input id="nlabel" placeholder="메모 (예: 카페 사례 릴스 10/29)" style="min-width:200px">
+<select id="ndest"><option value="/">첫 화면으로</option><option value="/portfolio">포트폴리오로</option><option value="/cases">사례 페이지로</option></select><button class="pri" id="nadd">링크 만들기</button><span id="nmsg" class="note"></span></div>
+<p class="note">링크 주소: <code id="preview"></code> — 누르면 유입 경로를 30일 동안 기억해서 가입·결제까지 이 콘텐츠로 계산해요. 운영자 기기와 검색봇의 클릭은 세지 않아요.</p></div>
+
+<h2>콘텐츠 비교</h2>
+<div class="card" id="cmp"><p class="note">불러오는 중…</p></div>
+
+<h2>등록된 링크</h2>
+<div class="card" id="lst"></div>
+
+<h2>링크 규칙</h2>
+<div class="card"><table class="rules" style="min-width:0"><tr><th>규칙</th><th>예시</th></tr>
+<tr><td>도메인/채널</td><td><code>/ig</code> 인스타 프로필 링크처럼 채널 전체</td></tr>
+<tr><td>도메인/채널/콘텐츠</td><td><code>/ig/cafe-reel1</code> 콘텐츠 하나 · <code>/rv/revu-01</code> 체험단 1번 리뷰어</td></tr>
+<tr><td>콘텐츠 이름</td><td>영문 소문자·숫자·하이픈, <b>타겟-소재-번호</b> 순서 권장: <code>cafe-reel-01</code>, <code>seller-flatlay-02</code>, <code>pork-blog-01</code></td></tr>
+<tr><td>채널 코드</td><td id="chcodes"></td></tr></table></div>
+</div>
+<script>
+const $=id=>document.getElementById(id), num=n=>(n||0).toLocaleString(), won=n=>Math.round(n||0).toLocaleString()+"원", pct=x=>isFinite(x)&&x>0?(x*100).toFixed(1)+"%":"–";
+const kst=d=>new Date(d.getTime()+9*3600e3).toISOString().slice(0,10);
+let days=30, CH={}, links=[], rows=[], sortK="clicks";
+const host=location.origin;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function preview(){const c=$("ncontent").value.trim().toLowerCase();$("preview").textContent=`${host}/${$("nch").value}${c?"/"+c:""}`;}
+async function loadLinks(){const r=await fetch("/api/links",{cache:"no-store"});const d=await r.json();if(!r.ok){document.querySelector(".w").innerHTML=`<p>${esc(d.error)} <a href="/">홈에서 로그인</a></p>`;return false}
+ CH=d.channels;links=d.links;$("nch").innerHTML=Object.entries(CH).map(([k,v])=>`<option value="${k}">${k} · ${esc(v)}</option>`).join("");
+ if($("chf").options.length<2)$("chf").innerHTML+=Object.entries(CH).map(([k,v])=>`<option value="${k}">${k} · ${esc(v)}</option>`).join("");
+ $("chcodes").innerHTML=Object.entries(CH).map(([k,v])=>`<code>${k}</code> ${esc(v)}`).join(" · ");
+ $("lst").innerHTML=links.length?`<table><tr><th>링크</th><th>메모</th><th>목적지</th><th>만든 날</th><th></th></tr>${links.map(l=>`<tr><td><code>/${esc(l.src)}</code> <button class="copy" data-c="${host}/${esc(l.src)}">복사</button></td><td>${esc(l.label)}</td><td>${esc(l.dest)}</td><td>${new Date(l.created).toLocaleDateString("ko-KR")}</td><td><button class="copy del" data-del="${esc(l.src)}">삭제</button></td></tr>`).join("")}</table>`:`<p class="note">아직 만든 링크가 없어요.</p>`;
+ bind();preview();return true}
+function bind(){document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{navigator.clipboard?.writeText(b.dataset.c).then(()=>b.textContent="복사됨")});
+ document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="한 번 더";return}await fetch("/api/links",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"delete",src:b.dataset.del})});loadLinks()})}
+async function loadStats(){const t=new Date(),from=kst(new Date(t-(days-1)*864e5)),to=kst(t);
+ const d=await (await fetch(`/api/stats?from=${from}&to=${to}`,{cache:"no-store"})).json();$("range").textContent=`${from} ~ ${to}`;rows=d.contents||[];draw()}
+function draw(){const f=$("chf").value;let r=rows.filter(x=>!f||x.src===f||x.src.startsWith(f+"/"));
+ const lab=s=>links.find(l=>l.src===s)?.label||"";
+ r=r.map(x=>({...x,signRate:x.visitors?x.signups/x.visitors:0,payRate:x.visitors?x.payers/x.visitors:0})).sort((a,b)=>(b[sortK]||0)-(a[sortK]||0));
+ const top=Math.max(1,...r.map(x=>x.clicks||x.visitors||0));
+ const cols=[["clicks","클릭"],["visitors","방문자"],["signups","가입"],["signRate","가입률"],["payOpen","결제창"],["payers","결제자"],["payRate","결제율"],["revenue","결제액"]];
+ $("cmp").innerHTML=r.length?`<table><tr><th>링크</th><th>메모</th><th>규모</th>${cols.map(([k,n])=>`<th data-s="${k}">${n}${sortK===k?" ▼":""}</th>`).join("")}</tr>${r.map(x=>{const [ch,ct]=x.src.split("/");return `<tr><td><code>/${esc(x.src)}</code><br><small style="color:var(--mut)">${esc(CH[ch]||ch)}${ct?"":" · 채널 전체"}</small></td><td>${esc(lab(x.src))}</td><td class="bar"><span class="b" style="width:${((x.clicks||x.visitors||0)/top*100).toFixed(0)}px"></span></td><td>${num(x.clicks)}</td><td>${num(x.visitors)}</td><td>${num(x.signups)}</td><td>${pct(x.signRate)}</td><td>${num(x.payOpen)}</td><td>${num(x.payers)}</td><td>${pct(x.payRate)}</td><td>${won(x.revenue)}</td></tr>`}).join("")}</table><p class="note">제목을 누르면 그 기준으로 정렬돼요. 가입·결제는 그 사람이 마지막으로 누른 링크(30일 기억)로 계산해요. utm 주소나 검색 유입도 함께 보여요.</p>`:`<p class="note">이 기간에는 기록이 없어요. 짧은 링크를 만들어 뿌려 보세요.</p>`;
+ document.querySelectorAll("[data-s]").forEach(th=>th.onclick=()=>{sortK=th.dataset.s;draw()})}
+document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-d]").forEach(x=>x.classList.toggle("on",x===b));days=+b.dataset.d;loadStats()});
+$("chf").onchange=draw;["nch","ncontent"].forEach(i=>$(i).addEventListener("input",preview));$("nch").onchange=preview;
+$("nadd").onclick=async()=>{const r=await fetch("/api/links",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action:"add",ch:$("nch").value,content:$("ncontent").value,label:$("nlabel").value,dest:$("ndest").value})});const d=await r.json();$("nmsg").textContent=r.ok?"만들었어요":d.error;if(r.ok){$("ncontent").value="";$("nlabel").value="";loadLinks().then(draw)}};
+loadLinks().then(ok=>ok&&loadStats());
+</script></body></html>
