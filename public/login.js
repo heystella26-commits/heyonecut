@@ -7,8 +7,8 @@
   m.onclick = e => { if (e.target === m) m.classList.add("hidden"); };
   m.innerHTML = `<div class="sheet lgsheet"><button class="x" onclick="document.getElementById('loginModal').classList.add('hidden')">×</button><span class="freebadge">로그인하면 무료 3회</span><h2>로그인</h2><p>처음 로그인하면 <b>무료로 3회</b> 써볼 수 있고, <b>첫 구매는 베이직 할인</b>을 받아요.<br>이용권은 계정에 저장돼서 휴대폰·PC 어디서든 이어서 쓸 수 있어요.</p><a class="sso k" href="/api/auth/kakao">카카오로 시작하기</a><a class="sso n" href="/api/auth/naver">네이버로 시작하기</a><a class="sso g" href="/api/auth/google">Google로 시작하기</a><p style="margin-top:14px;font-size:12px">이 브라우저에 있던 이용권은 로그인하면 계정으로 옮겨져요.<br>올린 원본 사진은 저장하지 않아요. 만든 결과는 보관함에 3일 보관돼요.<br><a href="/terms.html" target="_blank">이용약관</a> · <a href="/privacy.html" target="_blank">개인정보처리방침</a></p></div>`;
   document.body.appendChild(m);
-  const slot = document.createElement("span"); slot.id = "lgSlot";
-  document.querySelector(".topr")?.appendChild(slot);
+  let slot = document.getElementById("lgSlot");
+  if (!slot) { slot = document.createElement("span"); slot.id = "lgSlot"; document.querySelector(".topr")?.appendChild(slot); }
   window.openLogin = () => m.classList.remove("hidden");
   window.deleteAccount = async () => {
     if (!confirm("탈퇴하면 바로 로그아웃되고, 7일 뒤 계정 정보·남은 이용권·보관함 결과물이 모두 삭제돼요.\n7일 안에 같은 계정으로 다시 로그인하면 탈퇴가 취소돼요. 탈퇴할까요?")) return;
