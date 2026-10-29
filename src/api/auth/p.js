@@ -27,7 +27,8 @@ export default async function handler(req, res) {
   const p = P[name];
   if (!p) return back(res, "login_err=" + encodeURIComponent("지원하지 않는 로그인이에요."));
   if (!p.id()) return back(res, "login_err=" + encodeURIComponent("이 로그인은 준비 중이에요."));
-  const redirect = `https://${req.headers.host}/api/auth/${name}`;
+  const host = /(^|\.)heyonecut\.com$/.test(req.headers.host || "") ? "heyonecut.com" : req.headers.host;
+  const redirect = `https://${host}/api/auth/${name}`;
   const { code, state, error } = req.query;
 
   if (!code && !error) { // 1) 로그인 창으로

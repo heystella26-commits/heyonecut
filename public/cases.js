@@ -46,7 +46,7 @@
     if (!Array.isArray(list) || !list.length) return;
     g.classList.remove("hidden");
     g.innerHTML = `<h3>📸 사진 한 장이 이렇게 바뀌어요</h3><p class="note">왼쪽이 올린 사진 1장, 오른쪽이 헤이원컷이 만든 사진이에요. 제목을 누르면 함께 만들어진 인스타 게시물·블로그 글 전체를 볼 수 있어요.</p>
-      ${list.slice(0, 3).map(c => `<div class="case-row">
+      ${list.slice(0, 5).map(c => `<div class="case-row">
         <div class="case-imgs"><figure class="co"><img loading="lazy" src="${E(c.orig)}" alt="올린 사진"><figcaption>올린 사진</figcaption></figure><span class="case-arrow">→</span>
         ${gens(c).map(im => `<figure><img loading="lazy" src="${E(im.src)}" alt="${E(im.kind)}"><figcaption>${E(im.kind)}</figcaption></figure>`).join("")}</div>
         <a class="case-title" href="/cases#full-${E(c.id)}"><small${isIg(c) ? ' class="ig"' : ""}>${meta(c)}</small>${E(c.title)} <span>${isIg(c) ? "게시물 전체 보기 →" : "원문 전체 보기 →"}</span></a></div>`).join("")}
