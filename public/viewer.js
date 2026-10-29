@@ -30,7 +30,10 @@
   async function toFile(src, name) {
     let r; try { r = await fetch(src); } catch { r = null; }
     if (!r || !r.ok) r = await fetch("/api/dl?u=" + encodeURIComponent(src)); // 다른 사이트 이미지는 서버를 거쳐 받기
-    const b = await r.blob(); return new File([b], name, { type: b.type || "image/jpeg" });
+    let b = await r.blob();
+    // 카톡 등에서 사진으로 인식되도록 항상 진짜 JPEG(.jpg)로 맞춤 (PNG·WEBP·형식 불명이면 변환)
+    if (b.type !== "image/jpeg") { try { const bm = await createImageBitmap(b); const c = document.createElement("canvas"); c.width = bm.width; c.height = bm.height; const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(bm, 0, 0); b = await new Promise(ok => c.toBlob(ok, "image/jpeg", 0.92)) || b; } catch {} }
+    return new File([b], name.replace(/\.(jfif|jpeg|png|webp)$/i, ".jpg"), { type: "image/jpeg" });
   }
   // 저장: 아이폰은 공유 시트(→ 이미지 저장), 그 밖은 바로 다운로드
   window.saveImage = async (src, name = "heyonecut.jpg", silentFallback) => {
