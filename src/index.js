@@ -92,7 +92,7 @@ const MAIN = "heyonecut.com";
 async function route(request, env, ctx) {
     const url = new URL(request.url);
     // 예전 주소(workers.dev)·www → 정식 도메인으로 이동. 단 /api/*는 그대로 둠(예전 주소로 등록된 로그인·결제 콜백 보호)
-    if (url.hostname === "www." + MAIN || (url.hostname.endsWith(".workers.dev") && !url.pathname.startsWith("/api/")))
+    if ((url.hostname === "www." + MAIN || url.hostname.endsWith(".workers.dev")) && !url.pathname.startsWith("/api/"))
       return Response.redirect(`https://${MAIN}${url.pathname}${url.search}`, 301);
     if (!url.pathname.startsWith("/api/")) {
       const short = await handleShort(request, url).catch(() => null); // 짧은 추적 링크 (/ig, /ig/콘텐츠 …)
