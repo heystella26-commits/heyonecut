@@ -34,7 +34,7 @@ async function runIg() {
       body: JSON.stringify({ mode: "instagram", image: state.img, mediaType: "image/jpeg", ...info(), model: window.__model }) });
     readLeft(r);
     if (r.status === 402) { refreshQuota(); openPay(); throw new Error("이용 가능 횟수가 없어요."); }
-    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || "서버 오류"); }
+    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || (r.status === 413 ? "사진 용량이 너무 커요. 다른 사진으로 해 주세요." : "서버 오류 (" + r.status + ")")); }
     await readNdjson(r, ev => {
       if (ev.type === "partial") { const t = $("liveCapTxt"); if (t) t.textContent = ev.caption + (ev.first_comment ? "\n\n💬 " + ev.first_comment : ""); }
       if (ev.type === "text") {
@@ -100,7 +100,7 @@ async function runBlog() {
       body: JSON.stringify({ image: state.img, mediaType: "image/jpeg", ...info(), model: window.__model }) });
     readLeft(r);
     if (r.status === 402) { refreshQuota(); openPay(); throw new Error("블로그 글은 2회가 필요해요. 이용권을 충전해 주세요."); }
-    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || "서버 오류"); }
+    if (!r.ok || !r.body) { const j = await r.json().catch(() => ({})); throw new Error(j.error || (r.status === 413 ? "사진 용량이 너무 커요. 다른 사진으로 해 주세요." : "서버 오류 (" + r.status + ")")); }
     const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "";
     for (;;) {
       const { value, done } = await reader.read(); if (done) break;

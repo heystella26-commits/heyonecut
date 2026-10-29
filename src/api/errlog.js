@@ -9,6 +9,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ errors: (await getJSON("sys/errors")) || [] });
   }
   const b = req.body || {}; const q = await readQuota(req).catch(() => ({}));
-  if (!isAdmin(q.id)) await logError("화면:" + (b.where || "?"), b.msg, { id: q.id, ua: req.headers["user-agent"], extra: b.extra });
+  await logError((isAdmin(q.id) ? "[운영자] " : "") + "화면:" + (b.where || "?"), b.msg, { id: q.id, ua: req.headers["user-agent"], extra: b.extra });
   res.status(200).json({ ok: true });
 }
