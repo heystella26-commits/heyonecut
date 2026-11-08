@@ -5,7 +5,7 @@ import { sessionUid, isAdmin } from "./_quota.js";
 import { track } from "./_track.js";
 export const CHANNELS = {
   ig: "인스타그램(게시물·프로필)", ia: "인스타그램 광고", bl: "내 네이버 블로그", rv: "체험단 리뷰",
-  cm: "커뮤니티 글", kt: "카카오톡", th: "스레드", yt: "유튜브", na: "네이버 광고", ex: "기타",
+  cm: "커뮤니티 글", kt: "카카오톡", th: "스레드", yt: "유튜브", na: "네이버 광고", dg: "당근 광고", ex: "기타",
 };
 const LIST = "links/list";
 const SLUG = /^[a-z0-9][a-z0-9-]{0,39}$/;
