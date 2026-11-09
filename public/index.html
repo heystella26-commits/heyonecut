@@ -152,7 +152,7 @@
     <input id="payPhone" type="tel" inputmode="numeric" placeholder="01012345678" style="margin-bottom:10px" oninput="this.classList.remove('err')">
     <label class="agree" style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0 10px;cursor:pointer"><input type="checkbox" id="payAgree" style="width:auto;margin-top:3px"><span><a href="/terms.html" target="_blank">이용약관</a>, <a href="/refund.html" target="_blank">환불 규정</a>, <a href="/privacy.html" target="_blank">개인정보처리방침</a>을 확인했고 동의해요. (필수)</span></label>
     <label>할인 코드 <span class="note">(있으면 입력)</span></label>
-    <div style="display:flex;gap:8px;margin-bottom:10px"><input id="payCode" type="text" placeholder="예: 당근 30% 할인" style="flex:1;margin:0" oninput="this.classList.remove('err')" onkeydown="if(event.key==='Enter')applyCode()"><button type="button" onclick="applyCode()" style="flex-shrink:0;width:auto;padding:0 18px;border-radius:12px;border:1px solid #111;background:#111;color:#fff;font-weight:700;cursor:pointer">적용</button></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><input id="payCode" type="text" placeholder="예: WELCOME10" style="flex:1;margin:0" oninput="this.classList.remove('err')" onkeydown="if(event.key==='Enter')applyCode()"><button type="button" onclick="applyCode()" style="flex-shrink:0;width:auto;padding:0 18px;border-radius:12px;border:1px solid #111;background:#111;color:#fff;font-weight:700;cursor:pointer">적용</button></div>
     <div id="codeMsg" class="note" style="margin:-4px 0 10px"></div>
     <div id="payMsg"></div>
     <div class="plans">
