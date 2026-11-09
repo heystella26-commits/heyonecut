@@ -311,16 +311,33 @@ function readLeft(r) { const v = r.headers.get("X-Free-Left"); if (v !== null) s
 function payMsg(html, ok) { const m = $("payMsg"); m.innerHTML = html; m.classList.toggle("ok", !!ok); }
 function openPay() { payMsg(""); $("paywall").classList.remove("hidden"); try { const p = localStorage.getItem("sp_phone"); if (p && !$("payPhone").value) $("payPhone").value = p; } catch {} }
 function closePay() { $("paywall").classList.add("hidden"); }
+let PAY_CODE = "";
+async function applyCode() {
+  const el = $("payCode"), v = el.value.trim(), m = $("codeMsg");
+  if (!v) { PAY_CODE = ""; m.textContent = ""; resetPrices(); return; }
+  try {
+    const d = await fetch("/api/pay?code=" + encodeURIComponent(v), { cache: "no-store" }).then(r => r.json());
+    if (!d.ok) { PAY_CODE = ""; el.classList.add("err"); m.innerHTML = '<span style="color:#e5484d">' + esc(d.error || "할인 코드를 다시 확인해 주세요.") + "</span>"; resetPrices(); return; }
+    PAY_CODE = v; m.innerHTML = '<b style="color:#ff5a36">✓ ' + esc(d.label) + " 적용됐어요</b> · 모든 상품 " + d.rate + "% 할인";
+    document.querySelectorAll(".plan .price[data-plan]").forEach(p => {
+      const np = d.prices[p.dataset.plan]; if (!np || p.closest(".plan").classList.contains("hasoffer")) return;
+      p.innerHTML = '<s style="color:#999;font-size:.6em;font-weight:500">' + Number(p.dataset.base).toLocaleString() + "원</s> " + np.toLocaleString() + "원<small> /1회 구매</small>";
+    });
+  } catch { m.textContent = "잠시 후 다시 시도해 주세요."; }
+}
+function resetPrices() { document.querySelectorAll(".plan .price[data-plan]").forEach(p => { if (p.closest(".plan").classList.contains("hasoffer")) return; p.innerHTML = Number(p.dataset.base).toLocaleString() + "원<small> /1회 구매</small>"; }); }
 async function subscribe(plan) {
+  const cv = $("payCode")?.value.trim() || "";
+  if (cv && cv !== PAY_CODE) { await applyCode(); if (!PAY_CODE) return; }
   const ph = $("payPhone"), tel = ph.value.replace(/\D/g, "");
   if (!/^01\d{8,9}$/.test(tel)) { ph.classList.add("err"); ph.focus(); payMsg("☝️ 휴대폰 번호를 먼저 입력해 주세요 (예: 01012345678)"); return; }
   try { localStorage.setItem("sp_phone", tel); } catch {}
   document.querySelectorAll(".plan button").forEach(b => b.disabled = true);
   payMsg('<span class="spin"></span>결제창으로 이동 중…', true);
   try {
-    const r = await fetch("/api/pay", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan, phone: tel }) });
+    const r = await fetch("/api/pay", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ plan, phone: tel, code: PAY_CODE }) });
     const d = await r.json();
-    if (r.status === 503 && d.error) { payMsg(esc(d.error)); document.querySelectorAll(".plan button").forEach(b => b.disabled = false); return; }
+    if ((r.status === 503 || r.status === 400) && d.error) { payMsg(esc(d.error)); document.querySelectorAll(".plan button").forEach(b => b.disabled = false); return; }
     if (!r.ok || !d.payurl) throw new Error(d.error || "결제창을 만들지 못했어요.");
     location.href = d.payurl;
   } catch (e) {

@@ -2,7 +2,7 @@
 import crypto from "node:crypto";
 import { PLANS } from "./_plans.js";
 import { track, srcCookie } from "./_track.js";
-import { offerFor } from "./_coupon.js";
+import { offerFor, codeFor, priceAfter } from "./_coupon.js";
 import { saveOrder, loadOrder } from "./_orders.js";
 import { readQuota, writeQuota, cookieWalletId } from "./_quota.js";
 import { logError } from "./_errlog.js";
@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   const q = await readQuota(req);
   if (req.method === "POST") {
-    const { plan, phone } = req.body || {};
+    const { plan, phone, code } = req.body || {};
     const p = PLANS[plan];
     const tel = String(phone || "").replace(/\D/g, "");
     if (!p) return res.status(400).json({ error: "플랜을 선택해 주세요." });
@@ -20,12 +20,15 @@ export default async function handler(req, res) {
     if ((await getJSON("sys/pay-paused"))?.on) return res.status(503).json({ error: "지금은 결제를 잠시 쉬고 있어요. 무료 체험은 그대로 이용할 수 있어요 🙏" });
     if (!process.env.PAYAPP_USERID) return res.status(503).json({ error: "결제 준비 중이에요. (판매자 설정 전)" });
     const offer = await offerFor(q, PLANS);
-    const disc = offer && offer.plan === plan ? offer : null;
+    const cc = codeFor(code);
+    if (code && String(code).trim() && !cc) return res.status(400).json({ error: "할인 코드를 다시 확인해 주세요." });
+    let disc = offer && offer.plan === plan ? { ...offer, label: `첫 구매 ${offer.rate}% 할인` } : null;
+    if (cc && (!disc || cc.rate > disc.rate)) disc = { rate: cc.rate, price: priceAfter(p.price, cc.rate), code: cc.code, label: cc.label };
     const price = disc ? disc.price : p.price;
-    const goodname = disc ? `${p.name} (첫 구매 ${disc.rate}% 할인)` : p.name;
+    const goodname = disc ? `${p.name} (${disc.label})` : p.name;
     const oid = Date.now().toString(36) + crypto.randomBytes(6).toString("hex");
     const base = `https://${req.headers.host}`;
-    await saveOrder({ oid, uid: q.id, plan, price, list: p.price, coupon: disc ? disc.rate : 0, credits: p.credits, status: "pending", created: Date.now(), src: srcCookie(req) });
+    await saveOrder({ oid, uid: q.id, plan, price, list: p.price, coupon: disc ? disc.rate : 0, code: disc?.code || null, credits: p.credits, status: "pending", created: Date.now(), src: srcCookie(req) });
     const form = new URLSearchParams({
       cmd: "payrequest", userid: process.env.PAYAPP_USERID, goodname, price: String(price),
       recvphone: tel, smsuse: "n", var1: oid, feedbackurl: `${base}/api/payapp-feedback`,
@@ -37,10 +40,15 @@ export default async function handler(req, res) {
     if (out.get("state") !== "1") await logError("결제창 생성", out.get("errorMessage") || String(r.status), { id: q.id, ua: req.headers["user-agent"], extra: plan });
     if (out.get("state") !== "1") return res.status(502).json({ error: "결제창 생성 실패: " + (out.get("errorMessage") || r.status) });
     if (!q.user) await writeQuota(res, q);
-    await track("pay_open", { id: q.id, member: !!q.user, kind: disc ? plan + "_c" + disc.rate : plan, amount: price, src: srcCookie(req) });
+    await track("pay_open", { id: q.id, member: !!q.user, kind: plan, amount: price, src: srcCookie(req), coupon: disc ? (disc.code || "FIRST" + disc.rate) : null });
     return res.status(200).json({ oid, payurl: out.get("payurl") });
   }
   // GET ?offer=1: 지금 받을 수 있는 첫 구매 할인
+  if (req.query.code !== undefined) {
+    const cc = codeFor(req.query.code);
+    if (!cc) return res.status(200).json({ ok: false, error: "할인 코드를 다시 확인해 주세요." });
+    return res.status(200).json({ ok: true, rate: cc.rate, label: cc.label, prices: Object.fromEntries(Object.entries(PLANS).map(([k, v]) => [k, priceAfter(v.price, cc.rate)])) });
+  }
   if (req.query.offer) return res.status(200).json({ offer: await offerFor(q, PLANS), member: !!q.user });
   // GET: 결제 확인
   const oid = String(req.query.oid || "");

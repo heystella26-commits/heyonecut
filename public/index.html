@@ -151,27 +151,30 @@
     <label>휴대폰 번호 <span class="note">(필수 · 결제 확인용)</span></label>
     <input id="payPhone" type="tel" inputmode="numeric" placeholder="01012345678" style="margin-bottom:10px" oninput="this.classList.remove('err')">
     <label class="agree" style="display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:4px 0 10px;cursor:pointer"><input type="checkbox" id="payAgree" style="width:auto;margin-top:3px"><span><a href="/terms.html" target="_blank">이용약관</a>, <a href="/refund.html" target="_blank">환불 규정</a>, <a href="/privacy.html" target="_blank">개인정보처리방침</a>을 확인했고 동의해요. (필수)</span></label>
+    <label>할인 코드 <span class="note">(있으면 입력)</span></label>
+    <div style="display:flex;gap:8px;margin-bottom:10px"><input id="payCode" type="text" placeholder="예: 당근 30% 할인" style="flex:1;margin:0" oninput="this.classList.remove('err')" onkeydown="if(event.key==='Enter')applyCode()"><button type="button" onclick="applyCode()" style="flex-shrink:0;width:auto;padding:0 18px;border-radius:12px;border:1px solid #111;background:#111;color:#fff;font-weight:700;cursor:pointer">적용</button></div>
+    <div id="codeMsg" class="note" style="margin:-4px 0 10px"></div>
     <div id="payMsg"></div>
     <div class="plans">
       <div class="plan">
-        <h3>Go</h3><div class="price">4,500원<small> /1회 구매</small></div>
+        <h3>Go</h3><div class="price" data-plan="go" data-base="4500">4,500원<small> /1회 구매</small></div>
         <ul><li>5회 이용 (회당 900원)</li><li>이미지 재생성·다듬기 포함</li><li>가볍게 시작하기 좋아요</li></ul>
         <button onclick="subscribe('go')">Go 구매하기</button>
       </div>
       <div class="plan">
-        <h3>베이직</h3><div class="price">16,900원<small> /1회 구매</small></div>
+        <h3>베이직</h3><div class="price" data-plan="basic" data-base="16900">16,900원<small> /1회 구매</small></div>
         <ul><li>20회 이용 (회당 845원)</li><li>이미지 재생성·다듬기 포함</li><li>캡션·해시태그·댓글·DM</li></ul>
         <button onclick="subscribe('basic')">베이직 구매하기</button>
       </div>
       <div class="plan best">
-        <h3>프로 <span class="chip">추천</span></h3><div class="price">49,000원<small> /1회 구매</small></div>
+        <h3>프로 <span class="chip">추천</span></h3><div class="price" data-plan="pro" data-base="49000">49,000원<small> /1회 구매</small></div>
         <ul><li>60회 이용 (회당 817원)</li><li>블로그 글 30편 분량</li><li>인스타 예약 발행 (출시 예정)</li></ul>
         <button onclick="subscribe('pro')">프로 구매하기</button>
       </div>
     </div>
   </div>
 </div>
-<script src="/app.js?v=13"></script>
+<script src="/app.js?v=14"></script>
 <script src="/live.js?v=22"></script>
 <script src="/login.js?v=9"></script>
 <script src="/consent.js?v=1"></script>

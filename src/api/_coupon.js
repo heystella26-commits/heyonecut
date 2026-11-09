@@ -27,3 +27,14 @@ export async function offerFor(q, plans) {
   const price = Math.round(base * (1 - rate / 100) / 10) * 10;
   return { plan: COUPON_PLAN, rate, base, price, launch: rate === Number(E.COUPON_LAUNCH_RATE || 50) && !!E.COUPON_LAUNCH_UNTIL, until: E.COUPON_LAUNCH_UNTIL || null };
 }
+
+// 할인 코드: 모든 상품에 적용. 띄어쓰기·대소문자 무시
+export const CODES = {
+  "당근30%할인": { code: "DANGGEUN30", rate: 30, label: "당근 30% 할인" },
+  "당근30할인": { code: "DANGGEUN30", rate: 30, label: "당근 30% 할인" },
+};
+export function codeFor(input) {
+  const k = String(input || "").replace(/\s+/g, "").toLowerCase();
+  return k ? (CODES[k] || null) : null;
+}
+export const priceAfter = (base, rate) => Math.round(base * (1 - rate / 100) / 10) * 10;
