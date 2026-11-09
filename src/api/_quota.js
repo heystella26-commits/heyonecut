@@ -57,7 +57,7 @@ export async function checkQuota(req, res, n = 1) {
   if (left(q) < n) {
     if (!q.user) writeCookieQ(res, q);
     const msg = q.user ? "이용 가능 횟수가 없어요. 이용권을 구매해 주세요." : "로그인하면 무료로 " + FREE_LIMIT + "회 써볼 수 있어요.";
-    await track("paywall", { id: q.id, member: !!q.user, n });
+    await track(q.user ? "paywall" : "gen_click", { id: q.id, member: !!q.user, n });
     res.status(402).json({ error: msg, paywall: true, needLogin: !q.user });
     return null;
   }

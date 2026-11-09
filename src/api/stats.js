@@ -20,12 +20,13 @@ export default async function handler(req, res) {
   const one = async (sql, ...a) => (await q(sql, ...a).first()) || {};
   const all = async (sql, ...a) => (await q(sql, ...a).all()).results || [];
   const R = "day BETWEEN ? AND ?" + NA; // 기간 + 운영자 제외
-  const [vis, sign, login, act, wall, open, paid, rep, use, fail, plans, kinds, contents, sources, daily] = await Promise.all([
+  const [vis, sign, login, act, wall, gclick, open, paid, rep, use, fail, plans, kinds, contents, sources, daily] = await Promise.all([
     one(`SELECT COUNT(*) c, COUNT(DISTINCT who) u FROM events WHERE ${R} AND ev='visit'`),
     one(`SELECT COUNT(*) c FROM events WHERE ${R} AND ev='signup'`),
     one(`SELECT COUNT(DISTINCT who) u FROM events WHERE ${R} AND ev='login'`),
     one(`SELECT COUNT(DISTINCT who) u FROM events WHERE ${R} AND ev='use' AND member=1`),
     one(`SELECT COUNT(DISTINCT who) u FROM events WHERE ${R} AND ev='paywall'`),
+    one(`SELECT COUNT(DISTINCT who) u, COUNT(*) c FROM events WHERE ${R} AND ev='gen_click'`),
     one(`SELECT COUNT(DISTINCT who) u, COUNT(*) c FROM events WHERE ${R} AND ev='pay_open'`),
     one(`SELECT COUNT(DISTINCT who) u, COUNT(*) c, COALESCE(SUM(amount),0) a FROM events WHERE ${R} AND ev='paid'`),
     one(`SELECT COUNT(*) u FROM (SELECT who FROM events WHERE ${R} AND ev='paid' GROUP BY who HAVING COUNT(*) >= 2)`),
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
   ]);
   res.status(200).json({ from, to, freeLimit: FREE_LIMIT,
     sessions: vis.c || 0, users: vis.u || 0, signups: sign.c || 0, returningLogins: login.u || 0,
-    activated: act.u || 0, paywallUsers: wall.u || 0, payOpenUsers: open.u || 0,
+    activated: act.u || 0, paywallUsers: wall.u || 0, genClickUsers: gclick.u || 0, genClicks: gclick.c || 0, payOpenUsers: open.u || 0,
     payers: paid.u || 0, orders: paid.c || 0, revenue: paid.a || 0, repeatPayers: rep.u || 0,
     uses: use.c || 0, creditsUsed: use.n || 0, freeCreditsUsed: use.f || 0, fails: fail.c || 0,
     plans, kinds, contents, sources, daily, excluded: ex.length });

@@ -51,10 +51,10 @@ async function load(){
    ${g("결제액",d.revenue,won(d.revenue),250000,80000)}
    ${g("재구매자",d.repeatPayers,num(d.repeatPayers)+"명")}
   </div>`;
-  const steps=[["방문 사용자",d.users],["가입",d.signups],["첫 생성 (회원)",d.activated],["무료 소진·결제벽",d.paywallUsers],["결제창 열기",d.payOpenUsers],["결제 완료",d.payers]];
+  const steps=[["방문 사용자",d.users],["생성 클릭 (비로그인)",d.genClickUsers||0],["가입",d.signups],["생성 (로그인 후)",d.activated],["무료 소진·결제벽",d.paywallUsers],["결제창 열기",d.payOpenUsers],["결제 완료",d.payers]];
   const top=Math.max(1,...steps.map(s=>s[1]));
   h+=`<h2>퍼널</h2><div class="card fun">${steps.map((s,i)=>`<div class="row"><span>${s[0]}</span><div class="bar"><i style="width:${(s[1]/top*100).toFixed(1)}%"></i></div><span class="n">${num(s[1])}${i?`<small>${pct(steps[i-1][1]?s[1]/steps[i-1][1]:0)}</small>`:""}</span></div>`).join("")}
-   <p class="note">오른쪽 작은 숫자 = 바로 앞 단계 대비 남은 비율. 가장 크게 떨어지는 단계부터 고치세요.</p></div>`;
+   <p class="note">생성 클릭 = 로그인 안 한 상태에서 생성 버튼을 누른 사람(로그인 안내가 뜸, 실제 생성 아님) · 생성 = 로그인 후 실제로 만든 사람. 오른쪽 작은 숫자 = 바로 앞 단계 대비 남은 비율. 가장 크게 떨어지는 단계부터 고치세요.</p></div>`;
   const SN={ig:"인스타그램",ia:"인스타 광고",bl:"내 블로그",rv:"체험단 리뷰",cm:"커뮤니티",kt:"카카오톡",th:"스레드",yt:"유튜브",na:"네이버 광고",ex:"기타",direct:"직접 입력·북마크",instagram:"인스타그램",threads:"스레드",naver_blog:"네이버 블로그",naver_cafe:"네이버 카페",naver_search:"네이버 검색",naver_app:"네이버 앱",google:"구글",kakao_daum:"카카오·다음",kakaotalk:"카카오톡",facebook:"페이스북",youtube:"유튜브",x:"X(트위터)",portfolio:"포트폴리오 링크"};
   const sn=s=>SN[s]||s;
   h+=`<h2>유입 경로별 성과 <small style="font-weight:400;color:var(--mut)">· 운영자 계정·/admin을 연 기기·자동화 테스트 제외 · 10/25 이전 테스트 기록은 별도 보관</small></h2><div class="card"><table><tr><th>유입 경로</th><th>클릭</th><th>방문자</th><th>가입</th><th>가입률</th><th>결제창</th><th>결제자</th><th>결제율(방문 대비)</th><th>결제액</th></tr>${(d.sources||[]).map(x=>`<tr><td>${sn(x.src)}</td><td>${num(x.clicks)}</td><td>${num(x.visitors)}</td><td>${num(x.signups)}</td><td>${pct(x.visitors?x.signups/x.visitors:NaN)}</td><td>${num(x.payOpen)}</td><td>${num(x.payers)}</td><td>${pct(x.visitors?x.payers/x.visitors:NaN)}</td><td>${won(x.revenue)}</td></tr>`).join("")||`<tr><td colspan=9>아직 기록이 없어요</td></tr>`}</table>
