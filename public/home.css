@@ -31,6 +31,7 @@ body{background:#fff;font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Ap
 .hero-demo{position:relative;display:grid;grid-template-columns:.8fr 1fr;gap:14px;background:#f7f8fa;border-radius:32px;padding:22px;text-decoration:none;color:#111}
 .hero-demo img{width:100%;border-radius:18px;object-fit:cover;display:block}
 .hero-demo .o img{height:300px}.hero-demo .r img{height:200px}
+.hero-demo .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .lab{font-size:12px;font-weight:700;color:#8b95a1;margin:0 0 8px}.lab.c{color:#ff2e7e}
 .dcap{background:#fff;border-radius:16px;padding:12px 14px;font-size:13px;line-height:1.55;margin-top:10px;box-shadow:0 4px 14px rgba(0,0,0,.05)}.dcap em{color:#3b82f6;font-style:normal}
 .arr{position:absolute;left:41%;top:46%;width:40px;height:40px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:700}
