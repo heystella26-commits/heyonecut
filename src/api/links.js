@@ -25,6 +25,7 @@ export async function handleShort(request, url) {
   const h = new Headers({ Location: dest, "Cache-Control": "no-store" });
   if (!skip) h.append("Set-Cookie", `sp_src=${encodeURIComponent(src)}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
   h.append("Set-Cookie", `sp_lnk=1; Path=/; Secure; SameSite=Lax; Max-Age=60`);
+  h.append("Set-Cookie", `sp_ch=${ch}; Path=/; Secure; SameSite=Lax; Max-Age=2592000`);
   return new Response(null, { status: 302, headers: h });
 }
 // 운영자 API: GET 목록 / POST {action:'add', ch, content, label, dest} / {action:'delete', src}

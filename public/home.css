@@ -119,3 +119,30 @@ main{max-width:1152px}
 #form>.hero,#form>.panel,#form>.pf-banner,#form>.gallery,#form>.how,#form>.price-sum,#form>.faq{max-width:none;width:100%;margin-left:0;margin-right:0;box-sizing:border-box}
 #form>.panel{padding:28px 32px}
 @media (max-width:520px){#form>.panel{padding:16px}}
+/* 첫 클릭 개선(11/14): 업종별 예시 전환 + 큰 시작 버튼 + 모바일 하단 고정 버튼 */
+.demo-sw{display:flex;align-items:center;gap:8px;margin-top:20px;flex-wrap:wrap}
+.demo-sw span{font-size:14px;font-weight:700;color:#111;margin-right:2px}
+.demo-sw button{border:1.5px solid #e5e8eb;background:#fff;border-radius:99px;padding:9px 15px;font:inherit;font-size:14px;font-weight:600;color:#333d4b;cursor:pointer;min-height:40px}
+.demo-sw button.on{border-color:#191716;background:#191716;color:#fff}
+.hero-cta{display:none}
+.hero-cta-note{display:none}
+.hero-alt .dot{margin:0 6px;color:#c9cdd2}.hero-alt a{color:#111;font-weight:700}
+.hero-demo img{transition:opacity .2s}
+.sticky-cta{display:none}
+@media (max-width:760px){
+  .demo-sw{order:4;margin-top:16px}
+  .hero-demo{order:5}
+  .hero-cta{order:6;display:block;width:100%;margin-top:14px;border:0;border-radius:18px;background:#ff5a36;color:#fff;font:inherit;font-size:18px;font-weight:800;padding:19px 0;box-shadow:0 12px 28px rgba(255,90,54,.28);cursor:pointer}
+  .hero-cta:active{transform:scale(.99)}
+  .hero-cta-note{order:7;display:block;text-align:center;margin:8px 0 0;font-size:13px;color:#6b7684}.hero-cta-note b{color:#111}
+  .tabs{order:8;margin-top:18px}
+  .upbox{order:9}
+  .upbox:not(:has(#drop.has)){display:none}
+  .hero-copy:has(#drop.has) .hero-cta,.hero:has(#drop.has) .hero-cta,.hero:has(#drop.has) .hero-cta-note{display:none}
+  .hero .drop-help{order:10}
+  .trust{order:11}
+  .sticky-cta{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(255,255,255,0),#fff 35%);transform:translateY(110%);transition:transform .2s;display:block}
+  .sticky-cta.show{transform:none}
+  .sticky-cta button{width:100%;border:0;border-radius:16px;background:#ff5a36;color:#fff;font:inherit;font-size:16px;font-weight:800;padding:16px 0;box-shadow:0 8px 22px rgba(255,90,54,.3)}
+}
+.hero-demo .dcap{word-break:keep-all}

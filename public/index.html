@@ -18,7 +18,7 @@
 <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet">
 <link rel="stylesheet" href="/app.css?v=6">
 <link rel="stylesheet" href="/prog.css?v=12">
-<link rel="stylesheet" href="/home.css?v=6">
+<link rel="stylesheet" href="/home.css?v=7">
 </head>
 <body>
 <div class="top">
@@ -29,22 +29,24 @@
 <section id="form">
   <header class="hero">
     <div class="hero-copy">
-      <span class="pill">✦ 카페 · 네일 · 꽃집 · 쇼핑몰 사장님을 위한</span>
+      <span class="pill" id="heroPill">✦ 카페 · 음식점 · 네일 · 쇼핑몰 사장님을 위한</span>
       <h1>사진 한 장이면<br><span class="grad">게시물 끝.</span></h1>
       <p class="sub">연출 사진, 캡션, 해시태그, 블로그 글까지 1분이면 돼요.</p>
+      <div class="demo-sw" id="demoSw" role="group" aria-label="업종별 예시 보기"><span>우리 가게는?</span><button type="button" data-k="cafe">☕ 카페</button><button type="button" data-k="pork">🍖 음식점</button><button type="button" data-k="street">👕 패션</button></div>
+      <button type="button" class="hero-cta" id="heroCta" onclick="document.getElementById('file').click()">📸 내 가게 사진으로 만들기</button>
+      <p class="hero-cta-note"><b>로그인하면 무료 3회</b> · 실패하면 차감 없음</p>
       <nav class="tabs" aria-label="만들 콘텐츠">
         <button class="tab on" id="tabIg" onclick="setMode('ig')">📸 인스타그램<i>1회</i></button>
         <button class="tab" id="tabBlog" onclick="setMode('blog')">📝 블로그<i>2회</i></button>
       </nav>
       <input type="file" id="file" accept="image/*" hidden>
       <div class="upbox"><div id="drop"><div class="drop-in"><b>＋ 사진 올리기</b><span>누르거나 끌어다 놓으세요</span></div></div><button type="button" class="upgo" onclick="document.getElementById('file').click()">올리기 →</button></div>
-      <p class="drop-help">사진이 없나요? <button type="button" id="sampleBtn">예시 사진으로 해 보기</button></p>
-      <a class="pf-link" href="/portfolio">⭐ 실제 결과물 먼저 보기 <span>→</span></a>
+      <p class="drop-help hero-alt">사진이 없나요? <button type="button" id="sampleBtn">예시 사진으로 해 보기</button><span class="dot">·</span><a href="/portfolio">결과물 먼저 보기</a></p>
       <div class="trust"><span><b>무료 3회</b> 로그인 시</span><span><b>1분</b> 평균 완성</span><span><b>실패 시</b> 차감 없음</span></div>
     </div>
-    <a class="hero-demo" href="/cases#full-street" aria-label="실제 사례 보기">
-      <div class="o"><div class="lab">올린 사진</div><img style="object-position:center 15%" src="/cases/street-0.jpg" alt="올린 사진: 빈티지 시어링 자켓과 와이드 블랙 데님 스트릿룩"></div>
-      <div class="r"><div class="lab c">✨ 만들어진 게시물</div><div class="pair"><img style="object-position:center 15%" src="/cases/street-1.jpg" alt="만들어진 사진: 반측면 스트릿룩 컷"><img src="/cases/street-2.jpg" alt="만들어진 사진: 시어링 자켓 소재 디테일컷"></div><div class="dcap">겨울 코디 고민 끝, 이 조합이면 게임 오버 🖤 빈티지 시어링 자켓 × 와이드 블랙 데님<br><em>#겨울코디 #스트릿패션 #빈티지룩</em></div></div>
+    <a class="hero-demo" id="heroDemo" href="/cases#full-street" aria-label="실제 사례 보기">
+      <div class="o"><div class="lab">올린 사진</div><img id="dmO" style="object-position:center 15%" src="/cases/street-0.jpg" alt="올린 사진"></div>
+      <div class="r"><div class="lab c">✨ 만들어진 게시물</div><div class="pair"><img id="dmA" style="object-position:center 15%" src="/cases/street-1.jpg" alt="만들어진 사진"><img id="dmB" src="/cases/street-2.jpg" alt="만들어진 사진"></div><div class="dcap" id="dmCap">겨울 코디 고민 끝, 이 조합이면 게임 오버 🖤 빈티지 시어링 자켓 × 와이드 블랙 데님<br><em>#겨울코디 #스트릿패션 #빈티지룩</em></div></div>
     </a>
   </header>
   <div class="panel">
@@ -141,6 +143,7 @@
   </div>
 </section>
 </main>
+<div class="sticky-cta" id="stickyCta"><button type="button" onclick="document.getElementById('file').click()">📸 내 가게 사진으로 무료로 만들어보기</button></div>
 <footer style="max-width:1152px;margin:40px auto 30px;padding:0 16px;box-sizing:border-box;font-size:12.5px;color:#999;line-height:1.8"><a href="/terms.html" style="color:#777;margin-right:14px">이용약관</a><a href="/refund.html" style="color:#777;margin-right:14px">환불 규정</a><a href="/privacy.html" style="color:#777;font-weight:700">개인정보처리방침</a><br>헤이원컷 HEY 1/CUT · 상호 헤이스텔라 · 대표 신은영 · 사업자등록번호 740-03-03542<br>주소 경기도 김포시 양도로19번길 30, 305-가25호(풍무동) · 문의 heystella26@gmail.com</footer>
 
 <div id="paywall" class="modal hidden" onclick="if(event.target===this)closePay()">
@@ -179,7 +182,7 @@
 <script src="/login.js?v=9"></script>
 <script src="/consent.js?v=1"></script>
 <script src="/cases.js?v=4"></script>
-<script src="/home.js?v=1"></script>
+<script src="/home.js?v=2"></script>
 <script src="/history.js?v=4"></script>
 <script src="/viewer.js?v=4"></script>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "df90c3cbbb1741b59357c116347a552d"}'></script>
