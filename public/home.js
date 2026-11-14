@@ -40,6 +40,7 @@
     if (sync && chip && !chip.classList.contains("on")) chip.click();
   }
   sw.querySelectorAll("button").forEach(b => b.addEventListener("click", () => show(b.dataset.k, true)));
+  setTimeout(() => Object.values(D).forEach(d => [d.o, d.a, d.b].forEach(f => { const i = new Image(); i.src = "/cases/" + f + ".jpg"; })), 1200);
   // 당근 광고로 들어온 사람: 카페 예시 + 당근 할인 안내
   const ch = (document.cookie.match(/(?:^|; )sp_ch=([a-z]{2})/) || [])[1] || "";
   if (ch === "dg") {
